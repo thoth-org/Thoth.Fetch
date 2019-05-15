@@ -1,2 +1,5 @@
 FSharp.Core
 Fable.Core
+Fable.Fetch
+Fable.Promise
+Thoth.Json

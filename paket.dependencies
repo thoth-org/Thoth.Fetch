@@ -4,7 +4,11 @@ source https://www.nuget.org/api/v2
 storage:none
 
 nuget Fable.Core
+nuget Fable.Fetch
+nuget Fable.Promise
+nuget Thoth.Json
 nuget FSharp.Core redirects:force
+nuget Fable.Node
 
 group netcorebuild
     source https://www.nuget.org/api/v2

@@ -1,5 +1,5 @@
 module.exports = {
-    entry: resolve("./Thoth.Tests.fsproj"),
+    entry: resolve("./Tests.fsproj"),
     outDir: resolve("./bin"),
     babel: {
         plugins: ["transform-es2015-modules-commonjs"],

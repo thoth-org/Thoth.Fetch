@@ -31,8 +31,8 @@ let inline dtntWorkDir wd =
 let inline yarnWorkDir (ws : string) (yarnParams : Yarn.YarnParams) =
     { yarnParams with WorkingDirectory = ws }
 
-let projectFile = "./src/Thoth.Json.fsproj"
-let testsFile = "./tests/Thoth.Tests.fsproj"
+let projectFile = "./src/Thoth.Fetch.fsproj"
+let testsFile = "./tests/Tests.fsproj"
 
 module Util =
 
