@@ -17,13 +17,16 @@ type Fetch =
 
     /// **Description**
     ///
+    /// Retrieves data from the specified resource by applying the provided `decoder`.
+    /// An exception will be thrown if the decoder failed.
+    ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to be request
     ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
-    ///   * `init` - parameter of type `RequestProperties list` - Parameters passed to fetch
+    ///   * `init` - parameter of type `RequestProperties list option` - Parameters passed to fetch
     ///
     /// **Output Type**
-    ///   * `JS.Promise<'Response>` - The result of applying the decoder to the server response
+    ///   * `JS.Promise<'Response>`
     ///
     /// **Exceptions**
     ///   * `System.Exception` - Contains information explaining why the decoder failed
@@ -42,17 +45,22 @@ type Fetch =
 
     /// **Description**
     ///
+    /// Retrieves data from the specified resource.
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type.
+    /// An exception will be thrown if the decoder failed.
+    ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to be request
-    ///   * `init` - parameter of type `RequestProperties list` - Parameters passed to fetch
+    ///   * `init` - parameter of type `RequestProperties list option` - Parameters passed to fetch
     ///   * `isCamelCase` - parameter of type `bool option` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - parameter of type `ExtraCoders option` - Options passed to Thoth.Json to extends the known coders
-    ///   * `resolver` - parameter of type `ITypeResolver<'Response> option` - Used by Fable to provide generic type info
+    ///   * `responseResolver` - parameter of type `ITypeResolver<'Response> option` - Used by Fable to provide generic type info
     ///
     /// **Output Type**
-    ///   * `JS.Promise<'Response>` - The result of applying the decoder to the server response
+    ///   * `JS.Promise<'Response>`
     ///
     /// **Exceptions**
+    ///   * `System.Exception` - Contains information explaining why the decoder failed
     ///
     static member fetchAs<'Response>(url : string,
                                      ?init : RequestProperties list,
@@ -62,7 +70,23 @@ type Fetch =
         let decoder = Decode.Auto.generateDecoderCached<'Response>(?isCamelCase = isCamelCase, ?extra = extra, ?resolver = responseResolver)
         Fetch.fetchAs(url, decoder, ?init = init)
 
-    // Fetch a data structure from specified url and using the decoder
+    /// **Description**
+    ///
+    /// Retrieves data from the specified resource by applying the provided `decoder`.
+    ///
+    /// If the decoder succeed, we return `Ok 'Response`.
+    /// If the decoder failed, we return `Error "explanation..."`
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to be request
+    ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
+    ///   * `init` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<Result<'Response,string>>`
+    ///
+    /// **Exceptions**
+    ///
     static member tryFetchAs<'Response>(url : string,
                                         decoder : Decoder<'Response>,
                                         ?init : RequestProperties list) =
@@ -75,6 +99,26 @@ type Fetch =
             return Decode.fromString decoder body
         }
 
+    /// **Description**
+    ///
+    /// Retrieves data from the specified resource.
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type.
+    ///
+    /// If the decoder succeed, we return `Ok 'Response`.
+    /// If the decoder failed, we return `Error "explanation..."`
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to be request
+    ///   * `init` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///   * `isCamelCase` - parameter of type `bool option` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - parameter of type `ExtraCoders option` - Options passed to Thoth.Json to extends the known coders
+    ///   * `responseResolver` - parameter of type `ITypeResolver<'Response> option` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<Result<'Response,string>>`
+    ///
+    /// **Exceptions**
+    ///
     static member tryFetchAs<'Response>(url : string,
                                         ?init : RequestProperties list,
                                         ?isCamelCase : bool,
@@ -83,16 +127,19 @@ type Fetch =
         let decoder = Decode.Auto.generateDecoderCached<'Response>(?isCamelCase = isCamelCase, ?extra = extra, ?resolver = responseResolver)
         Fetch.tryFetchAs(url, decoder, ?init = init)
 
+    /// Alias to `Fetch.fetchAs`
     static member get<'Response>(url : string,
                                  decoder : Decoder<'Response>,
                                  ?init : RequestProperties list) =
         Fetch.fetchAs(url, decoder, ?init = init)
 
+    /// Alias to `Fetch.tryFetchAs`
     static member tryGet<'Response>(url : string,
                                     decoder : Decoder<'Response>,
                                     ?init : RequestProperties list) =
         Fetch.tryFetchAs(url, decoder, ?init = init)
 
+    /// Alias to `Fetch.fetchAs`
     static member get<'Response>(url : string,
                                  ?init : RequestProperties list,
                                  ?isCamelCase : bool,
@@ -100,6 +147,7 @@ type Fetch =
                                  [<Inject>] ?responseResolver: ITypeResolver<'Response>) =
         Fetch.fetchAs(url, ?init = init, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver)
 
+    /// Alias to `Fetch.tryFetchAs`
     static member tryGet<'Response>(url : string,
                                     ?init : RequestProperties list,
                                     ?isCamelCase : bool,
