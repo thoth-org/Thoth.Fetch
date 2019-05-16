@@ -18,10 +18,11 @@ type Fetch =
     /// **Description**
     ///
     /// Retrieves data from the specified resource by applying the provided `decoder`.
+    ///
     /// An exception will be thrown if the decoder failed.
     ///
     /// **Parameters**
-    ///   * `url` - parameter of type `string` - URL to be request
+    ///   * `url` - parameter of type `string` - URL to request
     ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
     ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
     ///
@@ -46,11 +47,13 @@ type Fetch =
     /// **Description**
     ///
     /// Retrieves data from the specified resource.
+    ///
     /// A decoder will be generated or retrieved from the cache for the `'Response` type.
+    ///
     /// An exception will be thrown if the decoder failed.
     ///
     /// **Parameters**
-    ///   * `url` - parameter of type `string` - URL to be request
+    ///   * `url` - parameter of type `string` - URL to request
     ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
     ///   * `isCamelCase` - parameter of type `bool option` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - parameter of type `ExtraCoders option` - Options passed to Thoth.Json to extends the known coders
@@ -75,10 +78,11 @@ type Fetch =
     /// Retrieves data from the specified resource by applying the provided `decoder`.
     ///
     /// If the decoder succeed, we return `Ok 'Response`.
+    ///
     /// If the decoder failed, we return `Error "explanation..."`
     ///
     /// **Parameters**
-    ///   * `url` - parameter of type `string` - URL to be request
+    ///   * `url` - parameter of type `string` - URL to request
     ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
     ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
     ///
@@ -102,13 +106,15 @@ type Fetch =
     /// **Description**
     ///
     /// Retrieves data from the specified resource.
+    ///
     /// A decoder will be generated or retrieved from the cache for the `'Response` type.
     ///
     /// If the decoder succeed, we return `Ok 'Response`.
+    ///
     /// If the decoder failed, we return `Error "explanation..."`
     ///
     /// **Parameters**
-    ///   * `url` - parameter of type `string` - URL to be request
+    ///   * `url` - parameter of type `string` - URL to request
     ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
     ///   * `isCamelCase` - parameter of type `bool option` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - parameter of type `ExtraCoders option` - Options passed to Thoth.Json to extends the known coders
@@ -155,6 +161,28 @@ type Fetch =
                                     [<Inject>] ?responseResolver: ITypeResolver<'Response>) =
         Fetch.tryFetchAs(url, ?properties = properties, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver)
 
+
+
+    /// **Description**
+    ///
+    /// Send a **POST** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// An exception will be thrown if the decoder failed.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `JsonValue` - JSON
+    ///   * `decoder` - parameter of type `Decoder<'Response>`- Decoder applied to the server response
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<'Response>`
+    ///
+    /// **Exceptions**
+    ///   * `System.Exception` - Contains information explaining why the decoder failed
+    ///
     static member post<'Response>(url : string,
                                   data : JsonValue,
                                   decoder : Decoder<'Response>,
@@ -167,6 +195,34 @@ type Fetch =
 
         Fetch.fetchAs(url, decoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **POST** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type.
+    ///
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type.
+    ///
+    /// An exception will be thrown if the decoder failed.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///   * `isCamelCase` - parameter of type `bool option` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - parameter of type `ExtraCoders option` - Options passed to Thoth.Json to extends the known coders
+    ///   * `responseResolver` - parameter of type `ITypeResolver<'Response> option` - Used by Fable to provide generic type info
+    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<'Response>`
+    ///
+    /// **Exceptions**
+    ///   * `System.Exception` - Contains information explaining why the decoder failed
+    ///
     static member post<'Data, 'Response>(url : string,
                                          data : 'Data,
                                          ?properties : RequestProperties list,
@@ -191,6 +247,28 @@ type Fetch =
 
         Fetch.fetchAs(url, responseDecoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **POST** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// If the decoder succeed, we return `Ok 'Response`.
+    ///
+    /// If the decoder failed, we return `Error "explanation..."`
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `JsonValue`
+    ///   * `decoder` - parameter of type `Decoder<'Response>`
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<Result<'Response,string>>`
+    ///
+    /// **Exceptions**
+    ///
     static member tryPost<'Response>(url : string,
                                      data : JsonValue,
                                      decoder : Decoder<'Response>,
@@ -203,6 +281,35 @@ type Fetch =
 
         Fetch.tryFetchAs(url, decoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **POST** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type.
+    ///
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type.
+    ///
+    /// If the decoder succeed, we return `Ok 'Response`.
+    ///
+    /// If the decoder failed, we return `Error "explanation..."`
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///   * `isCamelCase` - parameter of type `bool option` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - parameter of type `ExtraCoders option` - Options passed to Thoth.Json to extends the known coders
+    ///   * `responseResolver` - parameter of type `ITypeResolver<'Response> option` - Used by Fable to provide generic type info
+    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<Result<'Response,string>>`
+    ///
+    /// **Exceptions**
+    ///
     static member tryPost<'Data, 'Response>(url : string,
                                             data : 'Data,
                                             ?properties : RequestProperties list,
@@ -227,6 +334,27 @@ type Fetch =
 
         Fetch.tryFetchAs(url, responseDecoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **PUT** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// An exception will be thrown if the decoder failed.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `JsonValue`
+    ///   * `decoder` - parameter of type `Decoder<'Response>`
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<'Response>`
+    ///
+    /// **Exceptions**
+    ///   * `System.Exception` - Contains information explaining why the decoder failed
+    ///
     static member put<'Response>(url : string,
                                  data : JsonValue,
                                  decoder : Decoder<'Response>,
@@ -239,6 +367,34 @@ type Fetch =
 
         Fetch.fetchAs(url, decoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **PUT** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type.
+    ///
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type.
+    ///
+    /// An exception will be thrown if the decoder failed.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///   * `isCamelCase` - parameter of type `bool option` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - parameter of type `ExtraCoders option` - Options passed to Thoth.Json to extends the known coders
+    ///   * `responseResolver` - parameter of type `ITypeResolver<'Response> option` - Used by Fable to provide generic type info
+    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<'Response>`
+    ///
+    /// **Exceptions**
+    ///   * `System.Exception` - Contains information explaining why the decoder failed
+    ///
     static member put<'Data, 'Response>(url : string,
                                         data : 'Data,
                                         ?properties : RequestProperties list,
@@ -263,6 +419,28 @@ type Fetch =
 
         Fetch.fetchAs(url, responseDecoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **PUT** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// If the decoder succeed, we return `Ok 'Response`.
+    ///
+    /// If the decoder failed, we return `Error "explanation..."`
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `JsonValue`
+    ///   * `decoder` - parameter of type `Decoder<'Response>`
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<Result<'Response,string>>`
+    ///
+    /// **Exceptions**
+    ///
     static member tryPut<'Response>(url : string,
                                     data : JsonValue,
                                     decoder : Decoder<'Response>,
@@ -275,6 +453,35 @@ type Fetch =
 
         Fetch.tryFetchAs(url, decoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **PUT** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type.
+    ///
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type.
+    ///
+    /// If the decoder succeed, we return `Ok 'Response`.
+    ///
+    /// If the decoder failed, we return `Error "explanation..."`
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///   * `isCamelCase` - parameter of type `bool option` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - parameter of type `ExtraCoders option` - Options passed to Thoth.Json to extends the known coders
+    ///   * `responseResolver` - parameter of type `ITypeResolver<'Response> option` - Used by Fable to provide generic type info
+    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<Result<'Response,string>>`
+    ///
+    /// **Exceptions**
+    ///
     static member tryPut<'Data, 'Response>(url : string,
                                            data : 'Data,
                                            ?properties : RequestProperties list,
@@ -299,6 +506,27 @@ type Fetch =
 
         Fetch.tryFetchAs(url, responseDecoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **PACTH** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// An exception will be thrown if the decoder failed.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `JsonValue`
+    ///   * `decoder` - parameter of type `Decoder<'Response>`
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<'Response>`
+    ///
+    /// **Exceptions**
+    ///   * `System.Exception` - Contains information explaining why the decoder failed
+    ///
     static member patch<'Response>(url : string,
                                    data : JsonValue,
                                    decoder : Decoder<'Response>,
@@ -311,6 +539,34 @@ type Fetch =
 
         Fetch.fetchAs(url, decoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **PATH** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type.
+    ///
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type.
+    ///
+    /// An exception will be thrown if the decoder failed.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///   * `isCamelCase` - parameter of type `bool option` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - parameter of type `ExtraCoders option` - Options passed to Thoth.Json to extends the known coders
+    ///   * `responseResolver` - parameter of type `ITypeResolver<'Response> option` - Used by Fable to provide generic type info
+    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<'Response>`
+    ///
+    /// **Exceptions**
+    ///   * `System.Exception` - Contains information explaining why the decoder failed
+    ///
     static member patch<'Data, 'Response>(url : string,
                                           data : 'Data,
                                           ?properties : RequestProperties list,
@@ -335,6 +591,28 @@ type Fetch =
 
         Fetch.fetchAs(url, responseDecoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **PATCH** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// If the decoder succeed, we return `Ok 'Response`.
+    ///
+    /// If the decoder failed, we return `Error "explanation..."`
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `JsonValue`
+    ///   * `decoder` - parameter of type `Decoder<'Response>`
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<Result<'Response,string>>`
+    ///
+    /// **Exceptions**
+    ///
     static member tryPatch<'Response>(url : string,
                                       data : JsonValue,
                                       decoder : Decoder<'Response>,
@@ -347,6 +625,35 @@ type Fetch =
 
         Fetch.tryFetchAs(url, decoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **PATCH** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type.
+    ///
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type.
+    ///
+    /// If the decoder succeed, we return `Ok 'Response`.
+    ///
+    /// If the decoder failed, we return `Error "explanation..."`
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///   * `isCamelCase` - parameter of type `bool option` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - parameter of type `ExtraCoders option` - Options passed to Thoth.Json to extends the known coders
+    ///   * `responseResolver` - parameter of type `ITypeResolver<'Response> option` - Used by Fable to provide generic type info
+    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<Result<'Response,string>>`
+    ///
+    /// **Exceptions**
+    ///
     static member tryPatch<'Data, 'Response>(url : string,
                                              data : 'Data,
                                              ?properties : RequestProperties list,
@@ -371,6 +678,27 @@ type Fetch =
 
         Fetch.tryFetchAs(url, responseDecoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **DELETE** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// An exception will be thrown if the decoder failed.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `JsonValue`
+    ///   * `decoder` - parameter of type `Decoder<'Response>`
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<'Response>`
+    ///
+    /// **Exceptions**
+    ///   * `System.Exception` - Contains information explaining why the decoder failed
+    ///
     static member delete<'Response>(url : string,
                                     data : JsonValue,
                                     decoder : Decoder<'Response>,
@@ -383,6 +711,34 @@ type Fetch =
 
         Fetch.fetchAs(url, decoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **DELETE** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type.
+    ///
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type.
+    ///
+    /// An exception will be thrown if the decoder failed.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///   * `isCamelCase` - parameter of type `bool option` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - parameter of type `ExtraCoders option` - Options passed to Thoth.Json to extends the known coders
+    ///   * `responseResolver` - parameter of type `ITypeResolver<'Response> option` - Used by Fable to provide generic type info
+    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<'Response>`
+    ///
+    /// **Exceptions**
+    ///   * `System.Exception` - Contains information explaining why the decoder failed
+    ///
     static member delete<'Data, 'Response>(url : string,
                                            data : 'Data,
                                            ?properties : RequestProperties list,
@@ -407,6 +763,28 @@ type Fetch =
 
         Fetch.fetchAs(url, responseDecoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **DELETE** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// If the decoder succeed, we return `Ok 'Response`.
+    ///
+    /// If the decoder failed, we return `Error "explanation..."`
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `JsonValue`
+    ///   * `decoder` - parameter of type `Decoder<'Response>`
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<Result<'Response,string>>`
+    ///
+    /// **Exceptions**
+    ///
     static member tryDelete<'Response>(url : string,
                                        data : JsonValue,
                                        decoder : Decoder<'Response>,
@@ -419,6 +797,35 @@ type Fetch =
 
         Fetch.tryFetchAs(url, decoder, properties = properties)
 
+
+    /// **Description**
+    ///
+    /// Send a **DELETE** request to the specified resource and apply the provided `decoder` to the response.
+    ///
+    /// This method set the `ContentType` header to `"application/json"`.
+    ///
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type.
+    ///
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type.
+    ///
+    /// If the decoder succeed, we return `Ok 'Response`.
+    ///
+    /// If the decoder failed, we return `Error "explanation..."`
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `data` - parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
+    ///   * `properties` - parameter of type `RequestProperties list option` - Parameters passed to fetch
+    ///   * `isCamelCase` - parameter of type `bool option` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - parameter of type `ExtraCoders option` - Options passed to Thoth.Json to extends the known coders
+    ///   * `responseResolver` - parameter of type `ITypeResolver<'Response> option` - Used by Fable to provide generic type info
+    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<Result<'Response,string>>`
+    ///
+    /// **Exceptions**
+    ///
     static member tryDelete<'Data, 'Response>(url : string,
                                               data : 'Data,
                                               ?properties : RequestProperties list,
