@@ -6,7 +6,7 @@
 
 ## Usage
 
-Thoth.Fetch provides tried an easy to use API for working with Fable.Fetch and Thoth.Json. It supprots both manual and auto coders depending on your preferences.
+Thoth.Fetch provides an easy to use API for working with Fable.Fetch and Thoth.Json. It supprots both manual and auto coders depending on your preferences.
 
 For each methods, it provide a *safe* and an *unsafe* version.
 
