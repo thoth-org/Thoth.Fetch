@@ -1,5 +1,6 @@
 {
-    "FSharp.fsac.netCoreDllPath": "/Users/maximemangel/Workspaces/Github/fsharp/FsAutoComplete/src/FsAutoComplete/bin/Debug/netcoreapp2.1/fsautocomplete.dll",
+    "FSharp.fsac.netCoreDllPath_mac": "/Users/maximemangel/Workspaces/Github/fsharp/FsAutoComplete/src/FsAutoComplete/bin/Debug/netcoreapp2.1/fsautocomplete.dll",
+    "FSharp.fsac.netCoreDllPath": "/home/maxime/Workspace/fsharp/FsAutoComplete/src/FsAutoComplete/bin/Debug/netcoreapp2.1/fsautocomplete.dll",
     "FSharp.verboseLogging": true,
     "FSharp.showExplorerOnStartup": false
 }

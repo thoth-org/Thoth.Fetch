@@ -155,65 +155,64 @@
 // type ITypeResolver<'T> = class end
 
 
-// /// <summary>
-// /// This sample shows how to specify the <see cref="Fetch"/> constructor as a cref attribute.
-// /// <para>
-// /// This is a paragraph, with some <c>inlined code</c>
-// /// </para>
-// /// <para>
-// /// This is another paragraph, with a block code
-// /// <code>
-// /// type LightDU =
-// ///     | CaseA
-// ///     | CaseB
-// /// </code>
-// /// </para>
-// /// </summary>
-// /// <remarks>This a remark blocks because sometimes the summary isn't enought:
-// /// <para>
-// /// This is another paragraph, with a block code with synthax highlights
-// /// <code lang="fsharp">
-// /// type LightDU =
-// ///     | CaseA
-// ///     | CaseB
-// /// </code>
-// /// </para>
-// /// <para>
-// /// Demonstrate paramref: <paramref name="url"/> parameter takes a string.
-// /// </para>
-// /// <para>
-// /// Demonstrate typeparamref: Creates a new array of arbitrary type <typeparamref name="Response"/>
-// /// </para>
-// /// <para><a href="www.google.com">Click me</a></para>
-// /// </remarks>
-// /// <param name="url">URL to request</param>
-// /// <param name="data">Data sent via the body, it will be converted to JSON before</param>
-// /// <param name="properties">Parameters passed to fetch</param>
-// /// <param name="isCamelCase">Options passed to Thoth.Json to control JSON keys representation</param>
-// /// <param name="extra">Options passed to Thoth.Json to extends the known coders</param>
-// /// <param name="responseResolver">Used by Fable to provide generic type info</param>
-// /// <param name="dataResolver">Used by Fable to provide generic type info</param>
-// /// <typeparam name="Data">Type of the data to serialize to JSON in the body</typeparam>
-// /// <typeparam name="Response">Type of the response</typeparam>
-// /// <exception cref="System.Exception">Thrown when...</exception>
-// /// <exception cref="System.Exception2">Thrown when...</exception>
-// /// <example>
-// /// This sample shows how to call the <see cref="GetZero"/> method.
-// /// <code lang="csharp">
-// /// class TestClass
-// /// {
-// ///     static int Main()
-// ///     {
-// ///         return GetZero();
-// ///     }
-// /// }
-// /// </code>
-// /// </example>
-// /// <seealso cref="System.String"/>
-// /// <seealso cref="System.Boolean"/>
-// ///
-// ///
-
+/// <summary>
+/// This sample shows how to specify the <see cref="Fetch"/> constructor as a cref attribute.
+/// <para>
+/// This is a paragraph, with some <c>inlined code</c>
+/// </para>
+/// <para>
+/// This is another paragraph, with a block code
+/// <code>
+/// type LightDU =
+///     | CaseA
+///     | CaseB
+/// </code>
+/// </para>
+/// </summary>
+/// <remarks>This a remark blocks because sometimes the summary isn't enought:
+/// <para>
+/// This is another paragraph, with a block code with synthax highlights
+/// <code lang="fsharp">
+/// type LightDU =
+///     | CaseA
+///     | CaseB
+/// </code>
+/// </para>
+/// <para>
+/// Demonstrate paramref: <paramref name="url"/> parameter takes a string.
+/// </para>
+/// <para>
+/// Demonstrate typeparamref: Creates a new array of arbitrary type <typeparamref name="Response"/>
+/// </para>
+/// <para><a href="http://www.google.com">Click me</a></para>
+/// </remarks>
+/// <param name="url">URL to request</param>
+/// <param name="data">Data sent via the body, it will be converted to JSON before</param>
+/// <param name="properties">Parameters passed to fetch</param>
+/// <param name="isCamelCase">Options passed to Thoth.Json to control JSON keys representation</param>
+/// <param name="extra">Options passed to Thoth.Json to extends the known coders</param>
+/// <param name="responseResolver">Used by Fable to provide generic type info</param>
+/// <param name="dataResolver">Used by Fable to provide generic type info</param>
+/// <typeparam name="Data">Type of the data to serialize to JSON in the body</typeparam>
+/// <typeparam name="Response">Type of the response</typeparam>
+/// <exception cref="System.Exception">Thrown when...</exception>
+/// <exception cref="System.Exception2">Thrown when...</exception>
+/// <example>
+/// This sample shows how to call the <see cref="GetZero"/> method.
+/// <code lang="csharp">
+/// class TestClass
+/// {
+///     static int Main()
+///     {
+///         return GetZero();
+///     }
+/// }
+/// </code>
+/// </example>
+/// <seealso cref="System.String"/>
+/// <seealso cref="System.Boolean"/>
+///
+///
 /// <returns>
 /// <table><thead><tr><th> Value
 ///  </th><th> Meaning
@@ -239,4 +238,5 @@
 ///  </td></tr></tbody></table>
 /// </para>
 /// </returns>
+///
 let testEverything =  ""

@@ -3,21 +3,21 @@ module Thoth.Fetch
 open System
 
 let ready = ""
-TestLibrary.testSummary |> ignore
-TestLibrary.testInlinedCode |> ignore
-TestLibrary.testMultilineCode |> ignore
-TestLibrary.testMultilineCodeWithLang |> ignore
-TestLibrary.testMultilineCodeWithLang2 |> ignore
-TestLibrary.testExample |> ignore
-TestLibrary.testExceptions |> ignore
-TestLibrary.testList |> ignore
-TestLibrary.testParagraphs |> ignore
-TestLibrary.testParameters |> ignore
-TestLibrary.testParamRef |> ignore
-TestLibrary.testRemark |> ignore
-TestLibrary.testTypeParam |> ignore
-TestLibrary.test |> ignore
-TestLibrary.testReturns |> ignore
+// TestLibrary.testSummary |> ignore
+// TestLibrary.testInlinedCode |> ignore
+// TestLibrary.testMultilineCode |> ignore
+// TestLibrary.testMultilineCodeWithLang |> ignore
+// TestLibrary.testMultilineCodeWithLang2 |> ignore
+// TestLibrary.testExample |> ignore
+// TestLibrary.testExceptions |> ignore
+// TestLibrary.testList |> ignore
+// TestLibrary.testParagraphs |> ignore
+// TestLibrary.testParameters |> ignore
+// TestLibrary.testParamRef |> ignore
+// TestLibrary.testRemark |> ignore
+// TestLibrary.testTypeParam |> ignore
+// TestLibrary.test |> ignore
+// TestLibrary.testReturns |> ignore
 
 TestLibrary.testEverything |> ignore
 
