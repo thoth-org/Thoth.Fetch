@@ -14,6 +14,9 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+  <Reference Include="TestLibrarby">
+      <HintPath>../testLibrary/bin/Release/netstandard2.0/testLibrary.dll</HintPath>
+    </Reference>
     <Compile Include="Fetch.fs" />
   </ItemGroup>
   <ItemGroup>

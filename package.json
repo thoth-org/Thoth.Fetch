@@ -12,5 +12,7 @@
         "mocha": "^5.2.0",
         "node-fetch": "^2.5.0"
     },
-    "dependencies": {}
+    "dependencies": {
+        "@syncfusion/ej2-react-grids": "^17.2.34"
+    }
 }
