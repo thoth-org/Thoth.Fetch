@@ -26,10 +26,12 @@ let x = (1).CompareTo(2)
 
 let ``thank you microsoft...`` = System.Uri("")
 
+let ``thank you microsoft...2`` = new System.Uri("", false)
 
 
+let version = System.Version()
 
-
+let a = version.CompareTo(version)
 
 
 
