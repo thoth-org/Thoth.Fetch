@@ -156,129 +156,172 @@
 // type ITypeResolver<'T> = class end
 
 
-/// <summary>
-/// This sample shows how to specify the <see cref="Fetch"/> constructor as a cref attribute.
-/// <para>
-/// <see cref="System.UriBuilder"></see>
-/// </para>
-/// <para>
-/// This is a paragraph, with some <c>inlined code</c>
-/// </para>
-/// <para>
-/// This is another paragraph, with a block code
-/// <code>
-/// type LightDU =
-///     | CaseA
-///     | CaseB
-/// </code>
-/// </para>
-/// </summary>
-/// <remarks>This a remark blocks because sometimes the summary isn't enought:
-/// <para>
-/// This is another paragraph, with a block code with synthax highlights
-/// <code lang="fsharp">
-/// type LightDU =
-///     | CaseA
-///     | CaseB
-/// </code>
-/// </para>
-/// <para>
-/// Demonstrate void paramref: <paramref name="url"/> parameter takes a string.
-/// </para>
-/// <para>
-/// Demonstrate non-void paramref: <paramref name="url">urlFromInnerText</paramref> parameter takes a string.
-/// </para>
-/// <para>
-/// Demonstrate typeparamref: Creates a new array of arbitrary type <typeparamref name="Response"/>
-/// </para>
-/// <para><a href="http://www.google.com">Click me</a></para>
-/// </remarks>
-/// <param name="url">URL to request</param>
-/// <param name="data">Data sent via the body, it will be converted to JSON before</param>
-/// <param name="properties">Parameters passed to fetch</param>
-/// <param name="isCamelCase">Options passed to Thoth.Json to control JSON keys representation</param>
-/// <param name="extra">Options passed to Thoth.Json to extends the known coders</param>
-/// <param name="responseResolver">Used by Fable to provide generic type info</param>
-/// <param name="dataResolver">Used by Fable to provide generic type info</param>
-/// <typeparam name="Data">Type of the data to serialize to JSON in the body</typeparam>
-/// <typeparam name="Response">Type of the response</typeparam>
-/// <exception cref="System.Exception">Thrown when...</exception>
-/// <exception cref="T:System.UriFormatException"><block subset="none" type="note">
-///       In the <a href="http://go.microsoft.com/fwlink/?LinkID=247912" data-raw-source="[.NET for Windows Store apps](http://go.microsoft.com/fwlink/?LinkID=247912)" sourcefile="netstandard.yml" sourcestartlinenumber="3" sourceendlinenumber="3">.NET for Windows Store apps</a> or the <a href="~/docs/standard/cross-platform/cross-platform-development-with-the-portable-class-library.md" data-raw-source="[Portable Class Library](~/docs/standard/cross-platform/cross-platform-development-with-the-portable-class-library.md)" sourcefile="netstandard.yml" sourcestartlinenumber="3" sourceendlinenumber="3">Portable Class Library</a>, catch the base class exception, <xref href="System.FormatException"></xref>, instead.
-///
-///    </block>
-/// </exception>
-/// <example>
-/// This sample shows how to call the <see cref="GetZero"/> method.
-/// <code lang="csharp">
-/// class TestClass
-/// {
-///     static int Main()
-///     {
-///         return GetZero();
-///     }
-/// }
-/// </code>
-/// </example>
-/// <seealso cref="System.String"/>
-/// <seealso cref="System.Boolean"/>
-///
-///
-/// <returns>
-/// <table><thead><tr><th> Value
-///  </th><th> Meaning
-///  </th></tr></thead><tbody><tr><td> Less than zero
-///  </td><td><code data-dev-comment-type="paramref">uri1</code> is less than <code data-dev-comment-type="paramref">uri2</code>.
-///  </td></tr><tr><td> Zero
-///  </td><td><code data-dev-comment-type="paramref">uri1</code> equals <code data-dev-comment-type="paramref">uri2</code>.
-///  </td></tr><tr><td> Greater than zero
-///  </td><td><code data-dev-comment-type="paramref">uri1</code> is greater than <code data-dev-comment-type="paramref">uri2</code>.
-///  </td></tr></tbody></table>
-///
-/// <para> This is a paragrah in <c>returns</c> tag</para>
-///
-/// <para>
-/// <table><thead><tr><th> Value
-///  </th><th> Meaning
-///  </th></tr></thead><tbody><tr><td> Less than zero
-///  </td><td><code data-dev-comment-type="paramref">uri1</code> is less than <code data-dev-comment-type="paramref">uri2</code>.
-///  </td></tr><tr><td> Zero
-///  </td><td><code data-dev-comment-type="paramref">uri1</code> equals <code data-dev-comment-type="paramref">uri2</code>.
-///  </td></tr><tr><td> Greater than zero
-///  </td><td><code data-dev-comment-type="paramref">uri1</code> is greater than <code data-dev-comment-type="paramref">uri2</code>.
-///  </td></tr></tbody></table>
-/// </para>
-/// </returns>
+// /// <summary>
+// /// This sample shows how to specify the <see cref="Fetch"/> constructor as a cref attribute.
+// /// <para>
+// /// <see cref="System.UriBuilder"></see>
+// /// </para>
+// /// <para>
+// /// This is a paragraph, with some <c>inlined code</c>
+// /// </para>
+// /// <para>
+// /// This is another paragraph, with a block code
+// /// <code>
+// /// type LightDU =
+// ///     | CaseA
+// ///     | CaseB
+// /// </code>
+// /// </para>
+// /// </summary>
+// /// <remarks>This a remark blocks because sometimes the summary isn't enought:
+// /// <para>
+// /// This is another paragraph, with a block code with synthax highlights
+// /// <code lang="fsharp">
+// /// type LightDU =
+// ///     | CaseA
+// ///     | CaseB
+// /// </code>
+// /// </para>
+// /// <para>
+// /// Demonstrate void paramref: <paramref name="url"/> parameter takes a string.
+// /// </para>
+// /// <para>
+// /// Demonstrate non-void paramref: <paramref name="url">urlFromInnerText</paramref> parameter takes a string.
+// /// </para>
+// /// <para>
+// /// Demonstrate typeparamref: Creates a new array of arbitrary type <typeparamref name="Response"/>
+// /// </para>
+// /// <para><a href="http://www.google.com">Click me</a></para>
+// /// </remarks>
+// /// <param name="url">URL to request</param>
+// /// <param name="data">Data sent via the body, it will be converted to JSON before</param>
+// /// <param name="properties">Parameters passed to fetch</param>
+// /// <param name="isCamelCase">Options passed to Thoth.Json to control JSON keys representation</param>
+// /// <param name="extra">Options passed to Thoth.Json to extends the known coders</param>
+// /// <param name="responseResolver">Used by Fable to provide generic type info</param>
+// /// <param name="dataResolver">Used by Fable to provide generic type info</param>
+// /// <typeparam name="Data">Type of the data to serialize to JSON in the body</typeparam>
+// /// <typeparam name="Response">Type of the response</typeparam>
+// /// <exception cref="System.Exception">Thrown when...</exception>
+// /// <exception cref="T:System.UriFormatException"><block subset="none" type="note">
+// ///       In the <a href="http://go.microsoft.com/fwlink/?LinkID=247912" data-raw-source="[.NET for Windows Store apps](http://go.microsoft.com/fwlink/?LinkID=247912)" sourcefile="netstandard.yml" sourcestartlinenumber="3" sourceendlinenumber="3">.NET for Windows Store apps</a> or the <a href="~/docs/standard/cross-platform/cross-platform-development-with-the-portable-class-library.md" data-raw-source="[Portable Class Library](~/docs/standard/cross-platform/cross-platform-development-with-the-portable-class-library.md)" sourcefile="netstandard.yml" sourcestartlinenumber="3" sourceendlinenumber="3">Portable Class Library</a>, catch the base class exception, <xref href="System.FormatException"></xref>, instead.
+// ///
+// ///    </block>
+// /// </exception>
+// /// <example>
+// /// This sample shows how to call the <see cref="GetZero"/> method.
+// /// <code lang="csharp">
+// /// class TestClass
+// /// {
+// ///     static int Main()
+// ///     {
+// ///         return GetZero();
+// ///     }
+// /// }
+// /// </code>
+// /// </example>
+// /// <seealso cref="System.String"/>
+// /// <seealso cref="System.Boolean"/>
+// ///
+// ///
+// /// <returns>
+// /// <table><thead><tr><th> Value
+// ///  </th><th> Meaning
+// ///  </th></tr></thead><tbody><tr><td> Less than zero
+// ///  </td><td><code data-dev-comment-type="paramref">uri1</code> is less than <code data-dev-comment-type="paramref">uri2</code>.
+// ///  </td></tr><tr><td> Zero
+// ///  </td><td><code data-dev-comment-type="paramref">uri1</code> equals <code data-dev-comment-type="paramref">uri2</code>.
+// ///  </td></tr><tr><td> Greater than zero
+// ///  </td><td><code data-dev-comment-type="paramref">uri1</code> is greater than <code data-dev-comment-type="paramref">uri2</code>.
+// ///  </td></tr></tbody></table>
+// ///
+// /// <para> This is a paragrah in <c>returns</c> tag</para>
+// ///
+// /// <para>
+// /// <table><thead><tr><th> Value
+// ///  </th><th> Meaning
+// ///  </th></tr></thead><tbody><tr><td> Less than zero
+// ///  </td><td><code data-dev-comment-type="paramref">uri1</code> is less than <code data-dev-comment-type="paramref">uri2</code>.
+// ///  </td></tr><tr><td> Zero
+// ///  </td><td><code data-dev-comment-type="paramref">uri1</code> equals <code data-dev-comment-type="paramref">uri2</code>.
+// ///  </td></tr><tr><td> Greater than zero
+// ///  </td><td><code data-dev-comment-type="paramref">uri1</code> is greater than <code data-dev-comment-type="paramref">uri2</code>.
+// ///  </td></tr></tbody></table>
+// /// </para>
+// /// </returns>
+
+// /// <summary></summary>
+// /// <exception cref="T:System.UriFormatException"><block subset="none" type="note">
+// ///        In the <a href="http://go.microsoft.com/fwlink/?LinkID=247912" data-raw-source="[.NET for Windows Store apps](http://go.microsoft.com/fwlink/?LinkID=247912)" sourcefile="netstandard.yml" sourcestartlinenumber="3" sourceendlinenumber="3">.NET for Windows Store apps</a> or the <a href="~/docs/standard/cross-platform/cross-platform-development-with-the-portable-class-library.md" data-raw-source="[Portable Class Library](~/docs/standard/cross-platform/cross-platform-development-with-the-portable-class-library.md)" sourcefile="netstandard.yml" sourcestartlinenumber="3" sourceendlinenumber="3">Portable Class Library</a>, catch the base class exception, <xref href="System.FormatException"></xref>, instead.
+// ///
+// ///     </block>
+// ///     <code data-dev-comment-type="paramref">uriString</code> is empty.
+// ///  -or-
+// ///  The scheme specified in <code data-dev-comment-type="paramref">uriString</code> is not correctly formed. See <xref href="System.Uri.CheckSchemeName(System.String)"></xref>.
+// ///  -or-
+// ///  <code data-dev-comment-type="paramref">uriString</code> contains too many slashes.
+// ///  -or-
+// ///  The password specified in <code data-dev-comment-type="paramref">uriString</code> is not valid.
+// ///  -or-
+// ///  The host name specified in <code data-dev-comment-type="paramref">uriString</code> is not valid.
+// ///  -or-
+// ///  The file name specified in <code data-dev-comment-type="paramref">uriString</code> is not valid.
+// ///  -or-
+// ///  The user name specified in <code data-dev-comment-type="paramref">uriString</code> is not valid.
+// ///  -or-
+// ///  The host or authority name specified in <code data-dev-comment-type="paramref">uriString</code> cannot be terminated by backslashes.
+// ///  -or-
+// ///  The port number specified in <code data-dev-comment-type="paramref">uriString</code> is not valid or cannot be parsed.
+// ///  -or-
+// ///  The length of <code data-dev-comment-type="paramref">uriString</code> exceeds 65519 characters.
+// ///  -or-
+// ///  The length of the scheme specified in <code data-dev-comment-type="paramref">uriString</code> exceeds 1023 characters.
+// ///  -or-
+// ///  There is an invalid character sequence in <code data-dev-comment-type="paramref">uriString</code>.
+// ///  -or-
+// ///  The MS-DOS path specified in <code data-dev-comment-type="paramref">uriString</code> must start with c:\\.
+// /// </exception>
+// let testEverything =  ""
+
+
+
+
+// /// <summary>Searches the entire sorted <see cref="T:System.Collections.ArrayList"></see> for an element using the specified comparer and returns the zero-based index of the element.</summary>
+// /// <param name="value">The <see cref="T:System.Object"></see> to locate. The value can be null.</param>
+// /// <param name="comparer">The <see cref="T:System.Collections.IComparer"></see> implementation to use when comparing elements.   -or-  null to use the default comparer that is the <see cref="T:System.IComparable"></see> implementation of each element.</param>
+// /// <returns>The zero-based index of <paramref name="value">value</paramref> in the sorted <see cref="T:System.Collections.ArrayList"></see>, if <paramref name="value">value</paramref> is found; otherwise, a negative number, which is the bitwise complement of the index of the next element that is larger than <paramref name="value">value</paramref> or, if there is no larger element, the bitwise complement of <see cref="P:System.Collections.ArrayList.Count"></see>.</returns>
+// /// <exception cref="T:System.ArgumentException"><paramref name="comparer">comparer</paramref> is null and neither <paramref name="value">value</paramref> nor the elements of <see cref="T:System.Collections.ArrayList"></see> implement the <see cref="T:System.IComparable"></see> interface.</exception>
+// /// <exception cref="T:System.InvalidOperationException"><paramref name="comparer">comparer</paramref> is null and <paramref name="value">value</paramref> is not of the same type as the elements of the <see cref="T:System.Collections.ArrayList"></see>.</exception>
+// let ``test -or- inlined in a parameters description`` = ""
+
+
+
+
+// /// <summary>[...]  -or-  [...]  -or-  [...]</summary>
+// let testA = ()
+
+// /// <summary>
+// /// [...]
+// /// -or-
+// /// [...]
+// /// -or-
+// /// [...]
+// /// </summary>
+// let testB = ()
+
 
 /// <summary></summary>
-/// <exception cref="T:System.UriFormatException"><block subset="none" type="note">
-///        In the <a href="http://go.microsoft.com/fwlink/?LinkID=247912" data-raw-source="[.NET for Windows Store apps](http://go.microsoft.com/fwlink/?LinkID=247912)" sourcefile="netstandard.yml" sourcestartlinenumber="3" sourceendlinenumber="3">.NET for Windows Store apps</a> or the <a href="~/docs/standard/cross-platform/cross-platform-development-with-the-portable-class-library.md" data-raw-source="[Portable Class Library](~/docs/standard/cross-platform/cross-platform-development-with-the-portable-class-library.md)" sourcefile="netstandard.yml" sourcestartlinenumber="3" sourceendlinenumber="3">Portable Class Library</a>, catch the base class exception, <xref href="System.FormatException"></xref>, instead.
-///
-///     </block>
-///     <code data-dev-comment-type="paramref">uriString</code> is empty.
-///  -or-
-///  The scheme specified in <code data-dev-comment-type="paramref">uriString</code> is not correctly formed. See <xref href="System.Uri.CheckSchemeName(System.String)"></xref>.
-///  -or-
-///  <code data-dev-comment-type="paramref">uriString</code> contains too many slashes.
-///  -or-
-///  The password specified in <code data-dev-comment-type="paramref">uriString</code> is not valid.
-///  -or-
-///  The host name specified in <code data-dev-comment-type="paramref">uriString</code> is not valid.
-///  -or-
-///  The file name specified in <code data-dev-comment-type="paramref">uriString</code> is not valid.
-///  -or-
-///  The user name specified in <code data-dev-comment-type="paramref">uriString</code> is not valid.
-///  -or-
-///  The host or authority name specified in <code data-dev-comment-type="paramref">uriString</code> cannot be terminated by backslashes.
-///  -or-
-///  The port number specified in <code data-dev-comment-type="paramref">uriString</code> is not valid or cannot be parsed.
-///  -or-
-///  The length of <code data-dev-comment-type="paramref">uriString</code> exceeds 65519 characters.
-///  -or-
-///  The length of the scheme specified in <code data-dev-comment-type="paramref">uriString</code> exceeds 1023 characters.
-///  -or-
-///  There is an invalid character sequence in <code data-dev-comment-type="paramref">uriString</code>.
-///  -or-
-///  The MS-DOS path specified in <code data-dev-comment-type="paramref">uriString</code> must start with c:\\.
-/// </exception>
-let testEverything =  ""
+/// <returns>A signed integer that indicates the relative values of the two objects, as shown in the following table.
+/// <table><thead><tr><th> Return value
+/// </th><th> Meaning
+/// </th></tr></thead><tbody><tr><td> Less than zero
+/// </td><td> The current <xref href="System.Version"></xref> object is a version before <code data-dev-comment-type="paramref">version</code>.
+/// </td></tr><tr><td> Zero
+/// </td><td> The current <xref href="System.Version"></xref> object is the same version as <code data-dev-comment-type="paramref">version</code>.
+/// </td></tr><tr><td> Greater than zero
+/// </td><td> The current <xref href="System.Version"></xref> object is a version subsequent to <code data-dev-comment-type="paramref">version</code>.
+/// -or-
+/// <code data-dev-comment-type="paramref">version</code> is <code>null</code>.
+/// </td></tr></tbody></table>
+/// </returns>
+let testC = ()

@@ -19,7 +19,14 @@ let ready = ""
 // TestLibrary.test |> ignore
 // TestLibrary.testReturns |> ignore
 
-TestLibrary.testEverything |> ignore
+// TestLibrary.testEverything |> ignore
+
+// TestLibrary.``test -or- inlined in a parameters description`` |> ignore
+
+// TestLibrary.testA
+// TestLibrary.testB
+
+TestLibrary.testC
 
 
 let x = (1).CompareTo(2)
@@ -33,6 +40,14 @@ let version = System.Version()
 
 let a = version.CompareTo(version)
 
+
+
+
+let b = System.Collections.ArrayList()
+b.AddRange |> ignore
+
+let arrayList = System.Collections.ArrayList()
+arrayList.BinarySearch(box null, unbox<Collections.IComparer> null) |> ignore
 
 
 
