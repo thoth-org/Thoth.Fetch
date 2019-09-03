@@ -2,15 +2,16 @@ module Thoth.Fetch
 
 open Fetch
 open Fable.Core
+open Fable.Core.JsInterop
 open Thoth.Json
 
-let internal toJsonBody (value : JsonValue) =
+let internal toJsonBody (value : JsonValue) : BodyInit=
     #if DEBUG
     Encode.toString 4 value
-    |> U2.Case2
+    |> (!^)
     #else
     Encode.toString 0 value
-    |> U2.Case2
+    |> (!^)
     #endif
 
 type Fetch =
