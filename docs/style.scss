@@ -1,0 +1,17 @@
+@import "./../node_modules/bulma/sass/utilities/initial-variables";
+
+$primary: #2D3947;
+$text: #2b2b2b;
+
+$navbar-item-color: $white;
+$navbar-background-color: $primary;
+$navbar-item-hover-color: $white;
+$navbar-item-hover-background-color: lighten($primary, 8%);
+
+$toc-item-active-color: $primary;
+$toc-item-active-font-weight: 1000;
+
+$body-size: 14px;
+
+@import "./../node_modules/bulma/bulma.sass";
+@import "./../node_modules/nacara/scss/nacara.scss";
