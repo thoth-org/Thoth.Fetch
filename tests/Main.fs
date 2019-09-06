@@ -912,22 +912,22 @@ I run into the following problems:
 Error at: `$`
 Expecting an object with a field named `title` but instead got:
 {
-    "name": "Brandon Sanderson",
-    "id": 1
+    "id": 1,
+    "name": "Brandon Sanderson"
 }
 
 Error at: `$`
 Expecting an object with a field named `author` but instead got:
 {
-    "name": "Brandon Sanderson",
-    "id": 1
+    "id": 1,
+    "name": "Brandon Sanderson"
 }
 
 Error at: `$`
 Expecting an object with a field named `createdAt` but instead got:
 {
-    "name": "Brandon Sanderson",
-    "id": 1
+    "id": 1,
+    "name": "Brandon Sanderson"
 }
                     """.Trim()
                 Assert.AreEqual(error.Message, expected)
@@ -1002,22 +1002,22 @@ I run into the following problems:
 Error at: `$`
 Expecting an object with a field named `title` but instead got:
 {
-    "name": "Brandon Sanderson",
-    "id": 1
+    "id": 1,
+    "name": "Brandon Sanderson"
 }
 
 Error at: `$`
 Expecting an object with a field named `author` but instead got:
 {
-    "name": "Brandon Sanderson",
-    "id": 1
+    "id": 1,
+    "name": "Brandon Sanderson"
 }
 
 Error at: `$`
 Expecting an object with a field named `createdAt` but instead got:
 {
-    "name": "Brandon Sanderson",
-    "id": 1
+    "id": 1,
+    "name": "Brandon Sanderson"
 }
                         """.Trim()
                     )
