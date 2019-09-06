@@ -1,0 +1,496 @@
+<html class="has-navbar-fixed-top"><head><title>Thoth.Fetch · Thoth.Fetch</title><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" type="text/css" href="/Thoth.Fetch/style.css"/><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"/><script src="https://polyfill.app/api/polyfill?features=scroll-behavior"></script><script type="text/javascript">
+var nacara = {};
+                                    </script><script type="text/javascript">window.addEventListener("DOMContentLoaded", () => {
+    /*
+     * Initialize the menu state
+     */
+
+    // Set as active the menu for the current page
+    document
+        .querySelectorAll(`.menu [data-menu-id='${nacara.pageId}']`)
+        .forEach(function (menuItem) {
+            menuItem.classList.add("is-active")
+        });
+
+    // Collapse menu-group which doesn't concerns the current page
+    document
+        .querySelectorAll(`.menu .menu-group`)
+        .forEach(function (menuGroup) {
+            var parentChildren = Array.from(menuGroup.parentElement.children);
+            var subItems = parentChildren.find(function (child) {
+                return child.nodeName === "UL";
+            });
+
+            var activeMenu =
+                Array.from(subItems.children)
+                    .find(function (child) {
+                        return child.firstChild.classList.contains("is-active")
+                    });
+
+            if (activeMenu === undefined) {
+                menuGroup.classList.remove("is-expanded");
+                subItems.style.display = "none";
+            } else {
+                menuGroup.classList.add("is-expanded");
+                subItems.style.display = "block";
+            }
+        });
+
+    // Register listener to handle menu-group
+    document
+        .querySelectorAll(`.menu .menu-group`)
+        .forEach(function (menuGroup) {
+            menuGroup.addEventListener("click", function (ev) {
+                // All the menu "calculation" are done relative to the .menu-group element
+                var menuGroup =
+                    ev.target.classList.contains("menu-group")
+                        ? ev.target
+                        : ev.target.closest(".menu-group");
+
+                var parentChildren = Array.from(menuGroup.parentElement.children);
+
+                var subItems =
+                    parentChildren.find(function (child) {
+                        return child.nodeName === "UL";
+                    });
+
+                if (menuGroup.classList.contains("is-expanded")) {
+                    menuGroup.classList.remove("is-expanded");
+                    subItems.style.display = "none";
+                } else {
+                    menuGroup.classList.add("is-expanded");
+                    subItems.style.display = "block";
+                }
+
+            });
+        });
+
+    /*
+     * Setup menu navigation via Next and Previous button
+     */
+
+    // Start the counter from -1, but the first menu item will be 0
+    let computedMaxRank = -1;
+
+    document
+        .querySelectorAll(`.menu [data-menu-id]`)
+        .forEach(function (menuItem) {
+            computedMaxRank++;
+            menuItem.setAttribute("data-menu-rank", computedMaxRank);
+        });
+
+    document
+        .querySelector(".navigate-to-previous")
+        .addEventListener("click", () => {
+            const currentMenuRank =
+                document
+                    .querySelector(`.menu [data-menu-id='${nacara.pageId}']`)
+                    .getAttribute("data-menu-rank");
+
+            const previousRank = parseInt(currentMenuRank) - 1;
+
+            if (previousRank >= 0) {
+                document
+                    .querySelector(`.menu [data-menu-rank='${previousRank}']`)
+                    .click();
+            }
+        });
+
+    document
+        .querySelector(".navigate-to-next")
+        .addEventListener("click", () => {
+            const currentMenuRank =
+                document
+                    .querySelector(`.menu [data-menu-id='${nacara.pageId}']`)
+                    .getAttribute("data-menu-rank")
+
+            const nextRank = parseInt(currentMenuRank) + 1;
+
+            if (nextRank <= computedMaxRank) {
+                document
+                    .querySelector(`.menu [data-menu-rank='${nextRank}']`)
+                    .click();
+            }
+        });
+
+    // IIFE function in order to not pollute the function scope
+    (() => {
+
+        // The menu is an optional element, if no menu found then hide the Next & Previous buttons
+        if (document.querySelector(".menu") === null) {
+            document.querySelector(".navigate-to-next").style.visibility = "hidden"
+            document.querySelector(".navigate-to-previous").style.visibility = "hidden"
+            return;
+        }
+
+        const currentMenuRank =
+            parseInt(
+                document
+                    .querySelector(`.menu [data-menu-id='${nacara.pageId}']`)
+                    .getAttribute("data-menu-rank")
+            );
+
+        // Initialize the text of the Previous button
+        if (currentMenuRank >= 1) {
+            const previousText =
+                document
+                    .querySelector(`.menu [data-menu-rank='${currentMenuRank - 1}']`)
+                    .textContent;
+
+            document
+                .querySelector(".navigate-to-previous .text")
+                .textContent = previousText;
+        }
+
+        // Initialize the text of the Next button
+        if (currentMenuRank < computedMaxRank) {
+            const previousText =
+                document
+                    .querySelector(`.menu [data-menu-rank='${currentMenuRank + 1}']`)
+                    .textContent;
+
+            document
+                .querySelector(".navigate-to-next .text")
+                .textContent = previousText;
+        }
+
+        // Hide the navigation button depending on the page rank
+        if (currentMenuRank == 0) {
+            document.querySelector(".navigate-to-previous").style.visibility = "hidden";
+        } else if (currentMenuRank == computedMaxRank) {
+            document.querySelector(".navigate-to-next").style.visibility = "visibile";
+        }
+    })();
+
+
+    /*
+     * Setup menu burger behaviour
+     */
+
+    // Code copied from Bulma documentation
+    // https://bulma.io/documentation/components/navbar/#navbar-menu
+
+    // Get all "navbar-burger" elements
+    const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+    // Check if there are any navbar burgers
+    if ($navbarBurgers.length > 0) {
+
+        // Add a click event on each of them
+        $navbarBurgers.forEach(el => {
+            el.addEventListener('click', () => {
+
+                // Get the target from the "data-target" attribute
+                const target = el.dataset.target;
+                const $target = document.getElementById(target);
+
+                // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+                el.classList.toggle('is-active');
+                $target.classList.toggle('is-active');
+
+            });
+        });
+    }
+
+    const mobileMenuTrigger = document.querySelector(".mobile-menu .menu-trigger");
+
+    if (mobileMenuTrigger !== null) {
+        mobileMenuTrigger
+            .addEventListener("click", () => {
+                document
+                    .querySelector(".is-menu-column")
+                    .classList
+                    .toggle("force-show");
+        });
+    }
+
+});
+</script></head><body><nav class="navbar is-fixed-top"><div class="container"><div class="navbar-brand"><a class="navbar-item title is-4" href="https://thoth-org.github.io//Thoth.Fetch/">Thoth.Fetch</a><a class="navbar-item is-hidden-desktop" href="https://github.com/thoth-org/Thoth.Fetch" target="_blank"><span class="icon"><i class=" fab fa-github fa-lg"></i></span></a><a class="navbar-item is-hidden-desktop" href="https://twitter.com/MangelMaxime" target="_blank" style="color:#55acee"><span class="icon"><i class=" fab fa-twitter fa-lg"></i></span></a><div class="navbar-burger" data-target="nav-menu"><span></span><span></span><span></span></div></div><div class="navbar-menu" id="nav-menu"><div class="navbar-start"><a class="navbar-item">1.1.0</a></div><div class="navbar-end"><a class="navbar-item" href="/Thoth.Fetch/index.html" target="_self"><span class="icon"><i class=" fas fa-book fa-lg"></i></span><span>Documentation</span></a><a class="navbar-item" href="/Thoth.Fetch/changelog.html" target="_self"><span class="icon"><i class=" fas fa-tasks fa-lg"></i></span><span>Changelog</span></a><a class="navbar-item" href="https://gitter.im/fable-compiler/Fable" target="_blank"><span class="icon"><i class=" fab fa-gitter fa-lg"></i></span><span>Support</span></a><a class="navbar-item is-hidden-touch" href="https://github.com/thoth-org/Thoth.Fetch" target="_blank"><span class="icon"><i class=" fab fa-github fa-lg"></i></span></a><a class="navbar-item is-hidden-touch" href="https://twitter.com/MangelMaxime" target="_blank" style="color:#55acee"><span class="icon"><i class=" fab fa-twitter fa-lg"></i></span></a></div></div></div></nav><div class="container"><div><div class="columns is-mobile is-gapless"><div class="column is-hidden-touch is-menu-column is-2-desktop" style="padding-left:1.5rem !important"></div><div class="column full-height-scrollable-content toc-scrollable-container is-main-content is-full-touch is-8-desktop" style="scroll-behavior:smooth;overflow-x:hidden"><section class="section"><div class="content"><header class="page-header"><a class="button is-pulled-right is-primary is-outlined is-hidden-touch" target="_blank" href="https://github.com/thoth-org/Thoth.Fetch/edit/master/docs/index.md">Edit</a><h1>Thoth.Fetch</h1></header><div><p></p>
+<h2>Usage <a href="#Usage" aria-hidden="true"><span class="anchor" id="Usage"></span>#</a></h2>
+<p>Thoth.Fetch provides an easy to use API for working with <a href="https://github.com/fable-compiler/fable-fetch">Fable.Fetch</a> and <a href="https://mangelmaxime.github.io/Thoth/json/v3.html">Thoth.Json</a>. It supports both manual and auto coders depending on your preferences.</p>
+<p>For each method, it provide a <em><strong>safe</strong></em> and an <em><strong>unsafe</strong></em> version.</p>
+<p>We call <em><strong>safe</strong></em> a method which returns a <code>Result&lt;'T, string&gt;</code>.</p>
+<p>We call <em><strong>unsafe</strong></em> a method that will throw an exception when a coder fails.</p>
+<p>List of &quot;unsafe&quot; methods:</p>
+<ul>
+<li>fetchAs</li>
+<li>get</li>
+<li>post</li>
+<li>put</li>
+<li>patch</li>
+<li>delete</li>
+</ul>
+<p>List of &quot;safe&quot; methods:</p>
+<ul>
+<li>tryFetchAs</li>
+<li>tryGet</li>
+<li>tryPost</li>
+<li>tryPut</li>
+<li>tryPatch</li>
+<li>tryDelete</li>
+</ul>
+<h2>Manual coders <a href="#Manual-coders" aria-hidden="true"><span class="anchor" id="Manual-coders"></span>#</a></h2>
+<h3>Example <a href="#Example" aria-hidden="true"><span class="anchor" id="Example"></span>#</a></h3>
+<h4>Define your decoder <a href="#Define-your-decoder" aria-hidden="true"><span class="anchor" id="Define-your-decoder"></span>#</a></h4>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Fetch</span>
+<span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Json</span>
+<span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">System</span>
+
+<span style="color: #A0A1A7;font-style: italic">/// Type representing our ressource</span>
+<span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">Book</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">{</span><span> Id </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int</span>
+<span>      Title </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
+<span>      Author </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
+<span>      CreatedAt </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">DateTime</span>
+<span>      UpdatedAt </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">DateTime option </span><span style="color: #A626A4">}</span>
+
+<span>    </span><span style="color: #A0A1A7;font-style: italic">/// Transform a Book from JSON</span>
+<span>    </span><span style="color: #A626A4">static member</span><span> </span><span style="color: #E45649">Decoder</span><span> </span><span style="color: #A626A4">=</span>
+<span>        Decode.object </span><span style="color: #A626A4">(fun</span><span style="color: #383A42"> get </span><span style="color: #A626A4">-&gt;</span>
+<span>            </span><span style="color: #A626A4">{</span><span> Id </span><span style="color: #A626A4">=</span><span> get.Required.Field </span><span style="color: #50A14F">&quot;id&quot;</span><span> Decode.int</span>
+<span>              Title </span><span style="color: #A626A4">=</span><span> get.Required.Field </span><span style="color: #50A14F">&quot;title&quot;</span><span> Decode.string</span>
+<span>              Author </span><span style="color: #A626A4">=</span><span> get.Required.Field </span><span style="color: #50A14F">&quot;author&quot;</span><span> Decode.string</span>
+<span>              CreatedAt </span><span style="color: #A626A4">=</span><span> get.Required.Field </span><span style="color: #50A14F">&quot;createdAt&quot;</span><span> Decode.datetime</span>
+<span>              UpdatedAt </span><span style="color: #A626A4">=</span><span> get.Optional.Field </span><span style="color: #50A14F">&quot;updatedAt&quot;</span><span> Decode.datetime </span><span style="color: #A626A4">}</span>
+<span>        </span><span style="color: #A626A4">)</span></code></pre>
+<h4>GET request <a href="#GET-request" aria-hidden="true"><span class="anchor" id="GET-request"></span>#</a></h4>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">getBookById</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">id </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">promise {</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">url</span><span> </span><span style="color: #A626A4">=</span><span> sprintf </span><span style="color: #50A14F">&quot;http://localhost:8080/books/</span><span style="color: #A626A4">%i</span><span style="color: #50A14F">&quot;</span><span> id</span>
+<span>        </span><span style="color: #A626A4">return!</span><span> Fetch.get</span><span style="color: #A626A4">(</span><span style="color: #383A42">url</span><span style="color: #A626A4">,</span><span> </span><span style="color: #383A42">Book.Decoder</span><span style="color: #A626A4">)</span>
+<span>    </span><span style="color: #A626A4">}</span></code></pre>
+<h4>POST request <a href="#POST-request" aria-hidden="true"><span class="anchor" id="POST-request"></span>#</a></h4>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">createBook</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">book </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Book</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">promise {</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">url</span><span> </span><span style="color: #A626A4">=</span><span> </span><span style="color: #50A14F">&quot;http://localhost:8080/books/&quot;</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">data</span><span> </span><span style="color: #A626A4">=</span>
+<span>            Encode.object </span><span style="color: #A626A4">[</span>
+<span>                </span><span style="color: #50A14F">&quot;title&quot;</span><span style="color: #A626A4">,</span><span> Encode.string book.Title</span>
+<span>                </span><span style="color: #50A14F">&quot;author&quot;</span><span style="color: #A626A4">,</span><span> Encode.string book.Author</span>
+<span>                </span><span style="color: #50A14F">&quot;createdAt&quot;</span><span style="color: #A626A4">,</span><span> Encode.datetime book.CreatedAt</span>
+<span>                </span><span style="color: #50A14F">&quot;updatedAt&quot;</span><span style="color: #A626A4">,</span><span> Encode.option Encode.datetime book.UpdatedAt</span>
+<span>            </span><span style="color: #A626A4">]</span>
+<span>        </span><span style="color: #A626A4">return!</span><span> Fetch.post</span><span style="color: #A626A4">(</span><span>url</span><span style="color: #A626A4">,</span><span> data</span><span style="color: #A626A4">,</span><span> Book.Decoder</span><span style="color: #A626A4">)</span>
+<span>    </span><span style="color: #A626A4">}</span></code></pre>
+<h4>PUT request <a href="#PUT-request" aria-hidden="true"><span class="anchor" id="PUT-request"></span>#</a></h4>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">updateBook</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">book </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Book</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">promise {</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">url</span><span> </span><span style="color: #A626A4">=</span><span> </span><span style="color: #50A14F">&quot;http://localhost:8080/books/&quot;</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">data</span><span> </span><span style="color: #A626A4">=</span>
+<span>            Encode.object </span><span style="color: #A626A4">[</span>
+<span>                </span><span style="color: #50A14F">&quot;id&quot;</span><span style="color: #A626A4">,</span><span> Encode.int book.Id</span>
+<span>                </span><span style="color: #50A14F">&quot;title&quot;</span><span style="color: #A626A4">,</span><span> Encode.string book.Title</span>
+<span>                </span><span style="color: #50A14F">&quot;author&quot;</span><span style="color: #A626A4">,</span><span> Encode.string book.Author</span>
+<span>                </span><span style="color: #50A14F">&quot;createdAt&quot;</span><span style="color: #A626A4">,</span><span> Encode.datetime book.CreatedAt</span>
+<span>                </span><span style="color: #50A14F">&quot;updatedAt&quot;</span><span style="color: #A626A4">,</span><span> Encode.option Encode.datetime book.UpdatedAt</span>
+<span>            </span><span style="color: #A626A4">]</span>
+<span>        </span><span style="color: #A626A4">return!</span><span> Fetch.put</span><span style="color: #A626A4">(</span><span>url</span><span style="color: #A626A4">,</span><span> data</span><span style="color: #A626A4">,</span><span> Book.Decoder</span><span style="color: #A626A4">)</span>
+<span>    </span><span style="color: #A626A4">}</span></code></pre>
+<h4>DELETE request <a href="#DELETE-request" aria-hidden="true"><span class="anchor" id="DELETE-request"></span>#</a></h4>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">deleteBook</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">book </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Book</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">promise {</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">url</span><span> </span><span style="color: #A626A4">=</span><span> sprintf </span><span style="color: #50A14F">&quot;http://localhost:8080/books/</span><span style="color: #A626A4">%i</span><span style="color: #50A14F">&quot;</span><span> book.Id</span>
+<span>        </span><span style="color: #A0A1A7;font-style: italic">// We need to pass `null` to send no data</span>
+<span>        </span><span style="color: #A0A1A7;font-style: italic">// Otherwise, F# compiler can&#039;t resolve the overload</span>
+<span>        </span><span style="color: #A626A4">return!</span><span> Fetch.delete</span><span style="color: #A626A4">(</span><span>url</span><span style="color: #A626A4">,</span><span> </span><span style="color: #986801">null</span><span style="color: #A626A4">,</span><span> Decode.bool</span><span style="color: #A626A4">)</span>
+<span>    </span><span style="color: #A626A4">}</span></code></pre>
+<h2>Auto coders <a href="#Auto-coders" aria-hidden="true"><span class="anchor" id="Auto-coders"></span>#</a></h2>
+<p>You need to help F# type inference determine which type is expected.</p>
+<p>Here is two ways to do it, more exists but thuse are the simpler:</p>
+<h3>Type via the promise result <a href="#Type-via-the-promise-result" aria-hidden="true"><span class="anchor" id="Type-via-the-promise-result"></span>#</a></h3>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">getBookById</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">id </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">JS.Promise</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">Book</span><span style="color: #A626A4">&gt;</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">promise {</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">url</span><span> </span><span style="color: #A626A4">=</span><span> sprintf </span><span style="color: #50A14F">&quot;http://localhost:8080/books/</span><span style="color: #A626A4">%i</span><span style="color: #50A14F">&quot;</span><span> id</span>
+<span>        </span><span style="color: #A626A4">return!</span><span> Fetch.get</span><span style="color: #A626A4">(</span><span style="color: #383A42">url</span><span style="color: #A626A4">,</span><span> </span><span style="color: #383A42">isCamelCase </span><span style="color: #A626A4">=</span><span> </span><span style="color: #986801">true</span><span style="color: #A626A4">)</span>
+<span>    </span><span style="color: #A626A4">}</span>
+
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">createBook</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">book </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Book</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">JS.Promise</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">Book</span><span style="color: #A626A4">&gt;</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">promise {</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">url</span><span> </span><span style="color: #A626A4">=</span><span> </span><span style="color: #50A14F">&quot;http://localhost:8080/books/&quot;</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">data</span><span> </span><span style="color: #A626A4">=</span>
+<span>            </span><span style="color: #A626A4">{|</span><span> title </span><span style="color: #A626A4">=</span><span> book.Title</span>
+<span>               author </span><span style="color: #A626A4">=</span><span> book.Author</span>
+<span>               createdAt </span><span style="color: #A626A4">=</span><span> book.CreatedAt</span>
+<span>               updatedAt </span><span style="color: #A626A4">=</span><span> book.UpdatedAt </span><span style="color: #A626A4">|}</span>
+
+<span>        </span><span style="color: #A626A4">return!</span><span> Fetch.post</span><span style="color: #A626A4">(</span><span>url</span><span style="color: #A626A4">,</span><span> data</span><span style="color: #A626A4">,</span><span> isCamelCase </span><span style="color: #A626A4">=</span><span> </span><span style="color: #986801">true</span><span style="color: #A626A4">)</span>
+<span>    </span><span style="color: #A626A4">}</span></code></pre>
+<h3>Type when calling Fetch method <a href="#Type-when-calling-Fetch-method" aria-hidden="true"><span class="anchor" id="Type-when-calling-Fetch-method"></span>#</a></h3>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">getBookById</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">id </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">promise {</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">url</span><span> </span><span style="color: #A626A4">=</span><span> sprintf </span><span style="color: #50A14F">&quot;http://localhost:8080/books/</span><span style="color: #A626A4">%i</span><span style="color: #50A14F">&quot;</span><span> id</span>
+<span>        </span><span style="color: #A626A4">return!</span><span> Fetch.get</span><span style="color: #A626A4">&lt;</span><span>Book</span><span style="color: #A626A4">&gt;(</span><span>url</span><span style="color: #A626A4">,</span><span> isCamelCase </span><span style="color: #A626A4">=</span><span> </span><span style="color: #986801">true</span><span style="color: #A626A4">)</span>
+<span>    </span><span style="color: #A626A4">}</span>
+
+<span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">createBook</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">book </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Book</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">promise {</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">url</span><span> </span><span style="color: #A626A4">=</span><span> </span><span style="color: #50A14F">&quot;http://localhost:8080/books/&quot;</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">data</span><span> </span><span style="color: #A626A4">=</span>
+<span>            </span><span style="color: #A626A4">{|</span><span> title </span><span style="color: #A626A4">=</span><span> book.Title</span>
+<span>               author </span><span style="color: #A626A4">=</span><span> book.Author</span>
+<span>               createdAt </span><span style="color: #A626A4">=</span><span> book.CreatedAt</span>
+<span>               updatedAt </span><span style="color: #A626A4">=</span><span> book.UpdatedAt </span><span style="color: #A626A4">|}</span>
+
+<span>        </span><span style="color: #A626A4">return!</span><span> Fetch.post</span><span style="color: #A626A4">&lt;_,</span><span> Book</span><span style="color: #A626A4">&gt;(</span><span>url</span><span style="color: #A626A4">,</span><span> data</span><span style="color: #A626A4">,</span><span> isCamelCase </span><span style="color: #A626A4">=</span><span> </span><span style="color: #986801">true</span><span style="color: #A626A4">)</span>
+<span>    </span><span style="color: #A626A4">}</span></code></pre>
+<h3>Example <a href="#Example-2" aria-hidden="true"><span class="anchor" id="Example-2"></span>#</a></h3>
+<h4>Define your type <a href="#Define-your-type" aria-hidden="true"><span class="anchor" id="Define-your-type"></span>#</a></h4>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Fable.Core</span>
+<span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">Thoth.Fetch</span>
+<span style="color: #A626A4">open</span><span> </span><span style="color: #4078F2">System</span>
+
+<span style="color: #A0A1A7;font-style: italic">/// Type representing our ressource</span>
+<span style="color: #A626A4">type</span><span> </span><span style="color: #C18401">Book</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">{</span><span> Id </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int</span>
+<span>      Title </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
+<span>      Author </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">string</span>
+<span>      CreatedAt </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">DateTime</span>
+<span>      UpdatedAt </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">DateTime option </span><span style="color: #A626A4">}</span></code></pre>
+<h4>GET request <a href="#GET-request-2" aria-hidden="true"><span class="anchor" id="GET-request-2"></span>#</a></h4>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">getBookById</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">id </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">int</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">JS.Promise</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">Book</span><span style="color: #A626A4">&gt;</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">promise {</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">url</span><span> </span><span style="color: #A626A4">=</span><span> sprintf </span><span style="color: #50A14F">&quot;http://localhost:8080/books/</span><span style="color: #A626A4">%i</span><span style="color: #50A14F">&quot;</span><span> id</span>
+<span>        </span><span style="color: #A626A4">return!</span><span> Fetch.get</span><span style="color: #A626A4">(</span><span style="color: #383A42">url</span><span style="color: #A626A4">,</span><span> </span><span style="color: #383A42">isCamelCase </span><span style="color: #A626A4">=</span><span> </span><span style="color: #986801">true</span><span style="color: #A626A4">)</span>
+<span>    </span><span style="color: #A626A4">}</span></code></pre>
+<h4>POST request <a href="#POST-request-2" aria-hidden="true"><span class="anchor" id="POST-request-2"></span>#</a></h4>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">createBook</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">book </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Book</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">JS.Promise</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">Book</span><span style="color: #A626A4">&gt;</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">promise {</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">url</span><span> </span><span style="color: #A626A4">=</span><span> </span><span style="color: #50A14F">&quot;http://localhost:8080/books/&quot;</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">data</span><span> </span><span style="color: #A626A4">=</span>
+<span>            </span><span style="color: #A626A4">{|</span><span> title </span><span style="color: #A626A4">=</span><span> book.Title</span>
+<span>               author </span><span style="color: #A626A4">=</span><span> book.Author</span>
+<span>               createdAt </span><span style="color: #A626A4">=</span><span> book.CreatedAt</span>
+<span>               updatedAt </span><span style="color: #A626A4">=</span><span> book.UpdatedAt </span><span style="color: #A626A4">|}</span>
+
+<span>        </span><span style="color: #A626A4">return!</span><span> Fetch.post</span><span style="color: #A626A4">(</span><span>url</span><span style="color: #A626A4">,</span><span> data</span><span style="color: #A626A4">,</span><span> isCamelCase </span><span style="color: #A626A4">=</span><span> </span><span style="color: #986801">true</span><span style="color: #A626A4">)</span>
+<span>    </span><span style="color: #A626A4">}</span></code></pre>
+<h4>PUT request <a href="#PUT-request-2" aria-hidden="true"><span class="anchor" id="PUT-request-2"></span>#</a></h4>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">updateBook</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">book </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Book</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">JS.Promise</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">Book</span><span style="color: #A626A4">&gt;</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">promise {</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">url</span><span> </span><span style="color: #A626A4">=</span><span> </span><span style="color: #50A14F">&quot;http://localhost:8080/books/&quot;</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">data</span><span> </span><span style="color: #A626A4">=</span>
+<span>            </span><span style="color: #A626A4">{|</span><span> id </span><span style="color: #A626A4">=</span><span> book.Id</span>
+<span>               title </span><span style="color: #A626A4">=</span><span> book.Title</span>
+<span>               author </span><span style="color: #A626A4">=</span><span> book.Author</span>
+<span>               createdAt </span><span style="color: #A626A4">=</span><span> book.CreatedAt</span>
+<span>               updatedAt </span><span style="color: #A626A4">=</span><span> book.UpdatedAt </span><span style="color: #A626A4">|}</span>
+
+<span>        </span><span style="color: #A626A4">return!</span><span> Fetch.put</span><span style="color: #A626A4">(</span><span>url</span><span style="color: #A626A4">,</span><span> data</span><span style="color: #A626A4">,</span><span> isCamelCase </span><span style="color: #A626A4">=</span><span> </span><span style="color: #986801">true</span><span style="color: #A626A4">)</span>
+<span>    </span><span style="color: #A626A4">}</span></code></pre>
+<h4>DELETE request <a href="#DELETE-request-2" aria-hidden="true"><span class="anchor" id="DELETE-request-2"></span>#</a></h4>
+<pre style="background-color: #FAFAFA;color: ;padding: 1em"><code><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">deleteBook</span><span style="color: #383A42"> </span><span style="color: #A626A4">(</span><span style="color: #383A42">book </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">Book</span><span style="color: #A626A4">)</span><span> </span><span style="color: #A626A4">:</span><span> </span><span style="color: #C18401">JS.Promise</span><span style="color: #A626A4">&lt;</span><span style="color: #C18401">bool</span><span style="color: #A626A4">&gt;</span><span> </span><span style="color: #A626A4">=</span>
+<span>    </span><span style="color: #A626A4">promise {</span>
+<span>        </span><span style="color: #A626A4">let</span><span> </span><span style="color: #E45649">url</span><span> </span><span style="color: #A626A4">=</span><span> sprintf </span><span style="color: #50A14F">&quot;http://localhost:8080/books/</span><span style="color: #A626A4">%i</span><span style="color: #50A14F">&quot;</span><span> book.Id</span>
+<span>        </span><span style="color: #A0A1A7;font-style: italic">// We need to pass `null` to send no data</span>
+<span>        </span><span style="color: #A0A1A7;font-style: italic">// Otherwise, F# compiler can&#039;t resolve the overload</span>
+<span>        </span><span style="color: #A626A4">return!</span><span> Fetch.delete</span><span style="color: #A626A4">(</span><span>url</span><span style="color: #A626A4">,</span><span> </span><span style="color: #986801">null</span><span style="color: #A626A4">)</span>
+<span>    </span><span style="color: #A626A4">}</span></code></pre>
+<h3>Keep control over Thoth.Json <a href="#Keep-control-over-Thoth.Json" aria-hidden="true"><span class="anchor" id="Keep-control-over-Thoth.Json"></span>#</a></h3>
+<p>When using auto coders, you can pass <code>isCamelCase</code> and/or <code>extra</code> arguments in order to control <code>Thoth.Json</code> behaviour. You can learn more about them by reading <code>Thoth.Json</code> <a href="https://mangelmaxime.github.io/Thoth/json/v3.html">documentation</a>.</p>
+</div></div></section><div class="navigation-container"><button class="button is-outlined is-primary navigate-to-previous"><span class="icon"><i class=" fas fa-arrow-left"></i></span><span class="is-uppercase text">Previous</span></button><button class="button is-outlined is-primary navigate-to-next"><span class="is-uppercase text">Next</span><span class="icon"><i class=" fas fa-arrow-right"></i></span></button></div></div><div class="column full-height-scrollable-content toc-column is-hidden-touch is-2-desktop"><div><nav class="toc-container"><ul class="toc-headings"><div class="toc-label"><a href="#Usage">Usage</a></div></li><div class="toc-label"><a href="#Manual-coders">Manual coders</a></div><ul class="toc-headings"><li><a href="#Example">Example</a><ul class="toc-headings"><li><a href="#Define-your-decoder">Define your decoder</a></li><li><a href="#GET-request">GET request</a></li><li><a href="#POST-request">POST request</a></li><li><a href="#PUT-request">PUT request</a></li><li><a href="#DELETE-request">DELETE request</a></li></ul></li></ul></li><div class="toc-label"><a href="#Auto-coders">Auto coders</a></div><ul class="toc-headings"><li><a href="#Type-via-the-promise-result">Type via the promise result</a></li><li><a href="#Type-when-calling-Fetch-method">Type when calling Fetch method</a></li><li><a href="#Example-2">Example</a><ul class="toc-headings"><li><a href="#Define-your-type">Define your type</a></li><li><a href="#GET-request-2">GET request</a></li><li><a href="#POST-request-2">POST request</a></li><li><a href="#PUT-request-2">PUT request</a></li><li><a href="#DELETE-request-2">DELETE request</a></li></ul></li><li><a href="#Keep-control-over-Thoth.Json">Keep control over Thoth.Json</a></li></ul></li></ul></nav></div></div></div><div class="is-hidden-touch material-like-container is-for-desktop"><div class="material-like-button scroll-to-top"><span class="icon is-medium"><i class=" fas fa-angle-up fa-lg"></i></span></div></div><div class="is-hidden-desktop material-like-container is-for-touch"><div class="material-like-container-body"><div class="material-like-button toggle-toc"><span class="icon is-medium"><i class=" fas fa-ellipsis-v fa-lg"></i></span><div class="material-like-button-label">Table of content</div></div><div class="material-like-button scroll-to-top"><span class="icon is-medium"><i class=" fas fa-angle-up fa-lg"></i></span><div class="material-like-button-label">Scroll to top</div></div></div><div class="material-like-button close-open-button"><span class="icon is-medium"><i class=" fas fa-plus fa-lg"></i></span></div></div></div><script type="text/javascript">
+nacara.pageId = 'index';
+                                        </script><script type="text/javascript">window.addEventListener("DOMContentLoaded", () => {
+
+    const refContainer = document.querySelector(".toc-scrollable-container");
+
+    // Listener used to update the active section in the TOC
+    refContainer.addEventListener("scroll", () => {
+        const headers = document.querySelectorAll("h2, h3, h4");
+
+        // In order tof in the active section, we iterate over all the header
+        // from the bottom to the top.
+        // We take the first header that is "above" the top position of the window + 60px
+        const inversedHeaders =
+            [...headers]
+                .sort( (headerA, headerB) => {
+                    return headerB.getBoundingClientRect().top - headerA.getBoundingClientRect().top;
+                });
+
+        let activeHeader = null;
+
+        for (let index = 0; index < inversedHeaders.length; index++) {
+            const header = inversedHeaders[index];
+            if (header.getBoundingClientRect().top < 60) {
+                activeHeader = header;
+                break;
+            }
+        }
+
+
+        if (activeHeader === null)
+            return;
+
+        const anchorTag = activeHeader.querySelector("a").getAttribute("href");
+
+        // Make sure to remove `is-active` to all the TOC anchor elements
+        document
+            .querySelectorAll(".toc-container a")
+            .forEach(anchor => {
+                anchor.classList.remove("is-active");
+            });
+
+        // Set `is-active` to the current section
+        document
+            .querySelector(`.toc-container a[href="${anchorTag}"]`)
+            .classList.add("is-active");
+    });
+
+    document
+        .querySelector(".material-like-button.toggle-toc")
+        .addEventListener("click", () => {
+            document
+                .querySelector(".toc-container")
+                .classList.toggle("force-show");
+
+            document
+                .querySelector(".column.toc-column")
+                .classList.toggle("force-show");
+        });
+
+});
+</script><script type="text/javascript">window.addEventListener("DOMContentLoaded", () => {
+
+    const refContainer = document.querySelector(".toc-scrollable-container");
+
+    // Register scroll to top button
+    document
+        .querySelectorAll(".scroll-to-top")
+        .forEach(element => {
+            element.addEventListener("click", () => {
+                document
+                    .querySelector(".toc-scrollable-container")
+                    .scrollTo(0, 0);
+            });
+        });
+
+    // Listener used to update the position of TOC button at the bottom of the page
+    refContainer.addEventListener("scroll", () => {
+
+        // If we are at the end of the element
+        // Source: https://developer.mozilla.org/fr/docs/Web/API/Element/scrollHeight#D%C3%A9terminer_si_un_%C3%A9l%C3%A9ment_a_compl%C3%A8tement_%C3%A9t%C3%A9_d%C3%A9fil%C3%A9
+        if (refContainer.scrollTop > 30) {
+            document
+                .querySelector(".material-like-container.is-for-desktop")
+                .classList
+                .remove("hide");
+        } else {
+            document
+                .querySelector(".material-like-container.is-for-desktop")
+                .classList
+                .add("hide");
+        }
+    });
+
+    const bodyContainer = document.querySelector(".material-like-container.is-for-touch .material-like-container-body");
+
+    document
+        .querySelector(".material-like-button.close-open-button")
+        .addEventListener("click", () => {
+            bodyContainer.classList.toggle("show");
+            document
+                .querySelector(".material-like-button.close-open-button")
+                .classList.toggle("is-open");
+    });
+
+});
+</script></div></body></html>
