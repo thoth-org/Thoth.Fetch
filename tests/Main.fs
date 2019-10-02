@@ -93,8 +93,8 @@ Node.Api.``global``?fetch <- import "*" "node-fetch"
 describe "Thoth.Fetch" <| fun _ ->
 
     // Set up the json-server instance
-    // We are using dynamic typing because `Express` bindings has not been updated to
-    // Fable.Core yet.
+    // We are using dynamic typing because `Express` bindings have not been updated to
+    // Fable.Core 3 yet.
     // And I don't have time to upgrade it yet
 
     before <| fun _ ->
@@ -115,6 +115,26 @@ describe "Thoth.Fetch" <| fun _ ->
 
         server?``use``(jsonServer?defaults(defaultOptions))
         server?delete("/fake-delete", fakeDeleteHandler)
+        server?``get``("/get/unit", (fun req res ->
+            // Needs to be replace with `Encode.unit () |> Encode.toString 0`
+            res?jsonp(null)
+        ))
+        server?post("/post/unit", (fun req res ->
+            // Needs to be replace with `Encode.unit () |> Encode.toString 0`
+            res?jsonp(null)
+        ))
+        server?delete("/delete/unit", (fun req res ->
+            // Needs to be replace with `Encode.unit () |> Encode.toString 0`
+            res?jsonp(null)
+        ))
+        server?put("/put/unit", (fun req res ->
+            // Needs to be replace with `Encode.unit () |> Encode.toString 0`
+            res?jsonp(null)
+        ))
+        server?patch("/patch/unit", (fun req res ->
+            // Needs to be replace with `Encode.unit () |> Encode.toString 0`
+            res?jsonp(null)
+        ))
         server?``use``(jsonServer?router(dbFile))
         serverInstance <- server?listen(3000, !!ignore)
 
@@ -383,6 +403,14 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch d
             |> Promise.start
 
+        it "Fetch.get works with unit response" <| fun d ->
+            promise {
+                let! res = Fetch.get<unit>("http://localhost:3000/get/unit")
+                Assert.AreEqual(res, ())
+                d()
+            } |> Promise.catch d
+            |> Promise.start
+
     describe "Fetch.tryGet" <| fun _ ->
         it "Fetch.tryGet works with manual decoder" <| fun d ->
             promise {
@@ -466,6 +494,15 @@ Expecting a datetime but instead got: undefined
                 d()
             }
             |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.tryGet works with unit response" <| fun d ->
+            promise {
+                let! res = Fetch.tryGet<unit>("http://localhost:3000/get/unit")
+                let expected = Ok ()
+                Assert.AreEqual(res, expected)
+                d()
+            } |> Promise.catch d
             |> Promise.start
 
     describe "Fetch.post" <| fun _ ->
@@ -575,6 +612,14 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch d
             |> Promise.start
 
+        it "Fetch.post works with unit response" <| fun d ->
+            promise {
+                let! res = Fetch.post<_, unit>("http://localhost:3000/post/unit", null)
+                Assert.AreEqual(res, ())
+                d()
+            } |> Promise.catch d
+            |> Promise.start
+
     describe "Fetch.tryPost" <| fun _ ->
         it "Fetch.tryPost works with manual coder" <| fun d ->
             promise {
@@ -682,6 +727,15 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch d
             |> Promise.start
 
+        it "Fetch.tryPost works with unit response" <| fun d ->
+            promise {
+                let! res = Fetch.tryPost<_, unit>("http://localhost:3000/post/unit", null)
+                let expected = Ok ()
+                Assert.AreEqual(res, expected)
+                d()
+            } |> Promise.catch d
+            |> Promise.start
+
     describe "Fetch.put" <| fun _ ->
         it "Fetch.put works with manual coder" <| fun d ->
             promise {
@@ -770,6 +824,14 @@ Expecting a datetime but instead got: undefined
                 d()
             )
             |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.put works with unit response" <| fun d ->
+            promise {
+                let! res = Fetch.put<_, unit>("http://localhost:3000/put/unit", null)
+                Assert.AreEqual(res, ())
+                d()
+            } |> Promise.catch d
             |> Promise.start
 
     describe "Fetch.tryPut" <| fun _ ->
@@ -864,6 +926,15 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch d
             |> Promise.start
 
+        it "Fetch.tryPut works with unit response" <| fun d ->
+            promise {
+                let! res = Fetch.tryPut<_, unit>("http://localhost:3000/put/unit", null)
+                let expected = Ok ()
+                Assert.AreEqual(res, expected)
+                d()
+            } |> Promise.catch d
+            |> Promise.start
+
     describe "Fetch.patch" <| fun _ ->
         it "Fetch.patch works with manual coder" <| fun d ->
             promise {
@@ -952,6 +1023,14 @@ Expecting a datetime but instead got: undefined
                 d()
             )
             |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.patch works with unit response" <| fun d ->
+            promise {
+                let! res = Fetch.patch<_, unit>("http://localhost:3000/patch/unit", null)
+                Assert.AreEqual(res, ())
+                d()
+            } |> Promise.catch d
             |> Promise.start
 
     describe "Fetch.tryPatch" <| fun _ ->
@@ -1046,6 +1125,15 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch d
             |> Promise.start
 
+        it "Fetch.tryPatch works with unit response" <| fun d ->
+            promise {
+                let! res = Fetch.tryPatch<_, unit>("http://localhost:3000/patch/unit", null)
+                let expected = Ok ()
+                Assert.AreEqual(res, expected)
+                d()
+            } |> Promise.catch d
+            |> Promise.start
+
     describe "Fetch.delete" <| fun _ ->
         it "Fetch.delete works with manual coder" <| fun d ->
             promise {
@@ -1128,6 +1216,14 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch d
             |> Promise.start
 
+        it "Fetch.delete works with unit response" <| fun d ->
+            promise {
+                let! res = Fetch.delete<_, unit>("http://localhost:3000/delete/unit", null)
+                Assert.AreEqual(res, ())
+                d()
+            } |> Promise.catch d
+            |> Promise.start
+
     describe "Fetch.tryDelete" <| fun _ ->
         it "Fetch.tryDelete works with manual coder" <| fun d ->
             promise {
@@ -1206,4 +1302,13 @@ Expecting a datetime but instead got: undefined
                 d()
             }
             |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.tryDelete works with unit response" <| fun d ->
+            promise {
+                let! res = Fetch.tryDelete<_, unit>("http://localhost:3000/delete/unit", null)
+                let expected = Ok ()
+                Assert.AreEqual(res, expected)
+                d()
+            } |> Promise.catch d
             |> Promise.start
