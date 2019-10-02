@@ -115,25 +115,57 @@ describe "Thoth.Fetch" <| fun _ ->
 
         server?``use``(jsonServer?defaults(defaultOptions))
         server?delete("/fake-delete", fakeDeleteHandler)
-        server?``get``("/get/unit", (fun req res ->
-            // Needs to be replace with `Encode.unit () |> Encode.toString 0`
-            res?jsonp(null)
+        server?``get``("/get/unit-via-status-code", (fun req res ->
+            res?sendStatus(204)
         ))
-        server?post("/post/unit", (fun req res ->
-            // Needs to be replace with `Encode.unit () |> Encode.toString 0`
-            res?jsonp(null)
+        server?post("/post/unit-via-status-code", (fun req res ->
+            res?sendStatus(204)
         ))
-        server?delete("/delete/unit", (fun req res ->
-            // Needs to be replace with `Encode.unit () |> Encode.toString 0`
-            res?jsonp(null)
+        server?delete("/delete/unit-via-status-code", (fun req res ->
+            res?sendStatus(204)
         ))
-        server?put("/put/unit", (fun req res ->
-            // Needs to be replace with `Encode.unit () |> Encode.toString 0`
-            res?jsonp(null)
+        server?put("/put/unit-via-status-code", (fun req res ->
+            res?sendStatus(204)
         ))
-        server?patch("/patch/unit", (fun req res ->
+        server?patch("/patch/unit-via-status-code", (fun req res ->
+            res?sendStatus(204)
+        ))
+
+        server?``get``("/get/unit-via-real-json", (fun req res ->
             // Needs to be replace with `Encode.unit () |> Encode.toString 0`
-            res?jsonp(null)
+            res?sendStatus(204)
+        ))
+        server?post("/post/unit-via-real-json", (fun req res ->
+            // Needs to be replace with `Encode.unit () |> Encode.toString 0`
+            res?sendStatus(204)
+        ))
+        server?delete("/delete/unit-via-real-json", (fun req res ->
+            // Needs to be replace with `Encode.unit () |> Encode.toString 0`
+            res?sendStatus(204)
+        ))
+        server?put("/put/unit-via-real-json", (fun req res ->
+            // Needs to be replace with `Encode.unit () |> Encode.toString 0`
+            res?sendStatus(204)
+        ))
+        server?patch("/patch/unit-via-real-json", (fun req res ->
+            // Needs to be replace with `Encode.unit () |> Encode.toString 0`
+            res?sendStatus(204)
+        ))
+
+        server?``get``("/get//unit-via-no-body", (fun req res ->
+            res?send()
+        ))
+        server?post("/post//unit-via-no-body", (fun req res ->
+            res?send()
+        ))
+        server?delete("/delete//unit-via-no-body", (fun req res ->
+            res?send()
+        ))
+        server?put("/put//unit-via-no-body", (fun req res ->
+            res?send()
+        ))
+        server?patch("/patch//unit-via-no-body", (fun req res ->
+            res?send()
         ))
         server?``use``(jsonServer?router(dbFile))
         serverInstance <- server?listen(3000, !!ignore)
