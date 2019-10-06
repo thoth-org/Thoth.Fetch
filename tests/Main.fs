@@ -1328,7 +1328,8 @@ Expecting a datetime but instead got: undefined
             promise {
                 let! response  = Fetch.tryFetchAs("http://localhost:3000/authors/1", data = {|Dummy = true|} , encoder = failingEncoder )
                 let (Error(PreparingRequestFailed exn) ) = response
-                Assert.AreEqual (isNull exn, false)
+                let expected = "Not implemented"
+                Assert.AreEqual (exn.Message, expected)
                 d()
             }
             |> Promise.catch d
