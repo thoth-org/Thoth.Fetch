@@ -1334,3 +1334,12 @@ Expecting a datetime but instead got: undefined
             }
             |> Promise.catch d
             |> Promise.start
+
+        it "A network issue should be detected" <| fun d ->
+            promise {
+                let! (Error (NetworkError exn))  = Fetch.tryFetchAs("http://just.wrong")
+                Assert.AreEqual (isNull exn, false)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start

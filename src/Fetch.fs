@@ -9,7 +9,7 @@ type FetchError =
     | PreparingRequestFailed of exn
     | DecodingFailed of string
     | BadStatus of Response
-    | NetworkError
+    | NetworkError of exn
 
 type [<Erase>] GlobalFetch =
         [<Global>]static member fetch (req: RequestInfo, ?init: RequestInit) = jsNative :JS.Promise<Response>
@@ -95,7 +95,6 @@ type Fetch =
 
             promise {
                 let! response = globalFetch url properties
-                   
                 let! body = response.text()
                 let result =
                     if response.Ok then 
@@ -103,19 +102,15 @@ type Fetch =
                         then 
                             Ok (unbox ())
                         else
-                            
                             match decoder with
                             | Some decoder -> Decode.fromString decoder body
                             | _ -> Fetch.fromBody (body, ?isCamelCase= isCamelCase, ?extra = extra, ?responseResolver= responseResolver)
                             |> function
                                | Ok value -> Ok value
                                | Error msg -> DecodingFailed msg |> Error 
-                    else
-                       if response.Status < 200 || response.Status >= 300 then
-                            BadStatus response |> Error
-                       else
-                            NetworkError |> Error
+                    else BadStatus response |> Error
                 return result }
+            |> Promise.catch (NetworkError >> Error)
 
         with | exn  -> promise { return PreparingRequestFailed exn |> Error }
    
@@ -167,7 +162,7 @@ type Fetch =
                         | PreparingRequestFailed exn -> raise exn
                         | DecodingFailed msg -> failwith ("Decoding failed!\n\n" + msg)
                         | BadStatus response -> failwith (string response.Status + " " + response.StatusText + " for URL " + response.Url)
-                        | NetworkError -> failwith "NetworkError"
+                        | NetworkError exn -> failwith ("NetworkError!\n\n" + exn.Message)
             return response}
     
     /// **Description**
