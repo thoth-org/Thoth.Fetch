@@ -173,6 +173,8 @@ describe "Thoth.Fetch" <| fun _ ->
             |> Promise.catch (fun error ->
                 let expected =
                     """
+Decoding failed!
+
 The following errors were found:
 
 Error at: `$`
@@ -258,7 +260,8 @@ Expecting a datetime but instead got: undefined
                 let! res = Fetch.tryFetchAs("http://localhost:3000/authors/1", decoder = Book.Decoder)
                 let expected =
                     Error(
-                        """
+                        DecodingFailed(
+                            """
 The following errors were found:
 
 Error at: `$`
@@ -282,7 +285,7 @@ Expecting an object with a field named `createdAt` but instead got:
     "name": "Peter V. Brett"
 }
                         """.Trim()
-                    )
+                    ))
                 Assert.AreEqual(res, expected)
                 d()
             }
@@ -295,11 +298,12 @@ Expecting an object with a field named `createdAt` but instead got:
                 let! res = Fetch.tryFetchAs<_, Book>("http://localhost:3000/authors/1")
                 let expected =
                     Error(
-                        """
+                        DecodingFailed(
+                            """
 Error at: `$.createdAt`
 Expecting a datetime but instead got: undefined
                         """.Trim()
-                    )
+                    ))
                 Assert.AreEqual(res, expected)
                 d()
             }
@@ -346,6 +350,8 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch (fun error ->
                 let expected =
                     """
+Decoding failed!
+
 The following errors were found:
 
 Error at: `$`
@@ -384,6 +390,8 @@ Expecting an object with a field named `createdAt` but instead got:
             |> Promise.catch (fun error ->
                 let expected =
                     """
+Decoding failed!
+
 Error at: `$.createdAt`
 Expecting a datetime but instead got: undefined
                     """.Trim()
@@ -423,8 +431,8 @@ Expecting a datetime but instead got: undefined
                 let! res = Fetch.tryGet("http://localhost:3000/authors/1", decoder = Book.Decoder)
                 let expected =
                     Error(
-                        """
-The following errors were found:
+                        DecodingFailed(
+                            """The following errors were found:
 
 Error at: `$`
 Expecting an object with a field named `title` but instead got:
@@ -447,7 +455,7 @@ Expecting an object with a field named `createdAt` but instead got:
     "name": "Peter V. Brett"
 }
                         """.Trim()
-                    )
+                    ))
                 Assert.AreEqual(res, expected)
                 d()
             }
@@ -459,11 +467,12 @@ Expecting an object with a field named `createdAt` but instead got:
                 let! res = Fetch.tryGet<_, Book>("http://localhost:3000/authors/1")
                 let expected =
                     Error(
-                        """
+                        DecodingFailed(
+                            """
 Error at: `$.createdAt`
 Expecting a datetime but instead got: undefined
                         """.Trim()
-                    )
+                    ))
                 Assert.AreEqual(res, expected)
                 d()
             }
@@ -540,6 +549,8 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch (fun error ->
                 let expected =
                     """
+Decoding failed!
+
 The following errors were found:
 
 Error at: `$`
@@ -578,6 +589,8 @@ Expecting an object with a field named `createdAt` but instead got:
             |> Promise.catch (fun error ->
                 let expected =
                     """
+Decoding failed!
+
 Error at: `$.createdAt`
 Expecting a datetime but instead got: undefined
                     """.Trim()
@@ -653,11 +666,12 @@ Expecting a datetime but instead got: undefined
 
                 let expected =
                     Error(
-                        """
+                        DecodingFailed(
+                            """
 Error at: `$.createdAt`
 Expecting a datetime but instead got: undefined
                         """.Trim()
-                    )
+                    ))
 
                 Assert.AreEqual(res, expected)
                 d()
@@ -745,6 +759,8 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch (fun error ->
                 let expected =
                     """
+Decoding failed!
+
 The following errors were found:
 
 Error at: `$`
@@ -783,6 +799,8 @@ Expecting an object with a field named `createdAt` but instead got:
             |> Promise.catch (fun error ->
                 let expected =
                     """
+Decoding failed!
+
 Error at: `$.createdAt`
 Expecting a datetime but instead got: undefined
                     """.Trim()
@@ -842,7 +860,8 @@ Expecting a datetime but instead got: undefined
                 let! res = Fetch.tryPut("http://localhost:3000/authors/1", data, Book.Decoder)
                 let expected =
                     Error(
-                        """
+                        DecodingFailed(
+                            """
 The following errors were found:
 
 Error at: `$`
@@ -866,7 +885,7 @@ Expecting an object with a field named `createdAt` but instead got:
     "id": 1
 }
                         """.Trim()
-                    )
+                    ))
                 Assert.AreEqual(res, expected)
                 d()
             }
@@ -880,11 +899,12 @@ Expecting an object with a field named `createdAt` but instead got:
 
                 let expected =
                     Error(
-                        """
+                        DecodingFailed(
+                            """
 Error at: `$.createdAt`
 Expecting a datetime but instead got: undefined
                         """.Trim()
-                    )
+                    ))
 
                 Assert.AreEqual(res, expected)
                 d()
@@ -944,6 +964,8 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch (fun error ->
                 let expected =
                     """
+Decoding failed!
+
 The following errors were found:
 
 Error at: `$`
@@ -982,6 +1004,8 @@ Expecting an object with a field named `createdAt` but instead got:
             |> Promise.catch (fun error ->
                 let expected =
                     """
+Decoding failed!
+
 Error at: `$.createdAt`
 Expecting a datetime but instead got: undefined
                     """.Trim()
@@ -1041,7 +1065,8 @@ Expecting a datetime but instead got: undefined
                 let! res = Fetch.tryPatch("http://localhost:3000/authors/1", data, decoder =Book.Decoder)
                 let expected =
                     Error(
-                        """
+                        DecodingFailed(
+                            """
 The following errors were found:
 
 Error at: `$`
@@ -1065,7 +1090,7 @@ Expecting an object with a field named `createdAt` but instead got:
     "name": "Brandon Sanderson"
 }
                         """.Trim()
-                    )
+                    ))
                 Assert.AreEqual(res, expected)
                 d()
             }
@@ -1079,11 +1104,12 @@ Expecting an object with a field named `createdAt` but instead got:
 
                 let expected =
                     Error(
-                        """
+                        DecodingFailed(
+                            """
 Error at: `$.createdAt`
 Expecting a datetime but instead got: undefined
                         """.Trim()
-                    )
+                    ))
 
                 Assert.AreEqual(res, expected)
                 d()
@@ -1133,6 +1159,8 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch (fun error ->
                 let expected =
                     """
+Decoding failed!
+
 The following errors were found:
 
 Error at: `$`
@@ -1173,6 +1201,8 @@ Expecting an object with a field named `createdAt` but instead got:
             |> Promise.catch (fun error ->
                 let expected =
                     """
+Decoding failed!
+
 Error at: `$.createdAt`
 Expecting a datetime but instead got: undefined
                     """.Trim()
@@ -1220,7 +1250,8 @@ Expecting a datetime but instead got: undefined
                 let! res = Fetch.tryDelete("http://localhost:3000/fake-delete", null, Book.Decoder)
                 let expected =
                     Error(
-                        """
+                        DecodingFailed(
+                            """
 The following errors were found:
 
 Error at: `$`
@@ -1247,7 +1278,7 @@ Expecting an object with a field named `createdAt` but instead got:
     "isSuccess": true
 }
                         """.Trim()
-                    )
+                    ))
                 Assert.AreEqual(res, expected)
                 d()
             }
@@ -1259,11 +1290,12 @@ Expecting an object with a field named `createdAt` but instead got:
                 let! res = Fetch.tryDelete<_, Book>("http://localhost:3000/fake-delete", null)
                 let expected =
                     Error(
-                        """
+                        DecodingFailed(
+                            """
 Error at: `$.createdAt`
 Expecting a datetime but instead got: undefined
                         """.Trim()
-                    )
+                    ))
                 Assert.AreEqual(res, expected)
                 d()
             }
@@ -1278,4 +1310,26 @@ Expecting a datetime but instead got: undefined
                 d()
             } |> Promise.catch d
             |> Promise.start
+
+    describe "Errors" <| fun _ ->
+        it "A 404 should be reported as Bad Status" <| fun d ->
+            promise {
+                let! (Error (BadStatus res)) = Fetch.tryGet("http://localhost:3000/404")
+                let expected = 404
+                Assert.AreEqual(res.Status, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
  
+        it "A failing encoder should be detected" <| fun d ->
+            let failingEncoder t = failwith "Not implemented"
+            
+            promise {
+                let! response  = Fetch.tryFetchAs("http://localhost:3000/authors/1", data = {|Dummy = true|} , encoder = failingEncoder )
+                let (Error(PreparingRequestFailed exn) ) = response
+                Assert.AreEqual (isNull exn, false)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start

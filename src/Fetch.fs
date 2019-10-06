@@ -5,7 +5,17 @@ open Fable.Core
 open Fable.Core.JsInterop
 open Thoth.Json
 
+type FetchError =
+    | PreparingRequestFailed of exn
+    | DecodingFailed of string
+    | BadStatus of Response
+    | NetworkError
 
+type [<Erase>] GlobalFetch =
+        [<Global>]static member fetch (req: RequestInfo, ?init: RequestInit) = jsNative :JS.Promise<Response>
+
+let private globalFetch (url: string) (init: RequestProperties list) : JS.Promise<Response> =
+    GlobalFetch.fetch(RequestInfo.Url url, requestProps init)
 
 let internal toJsonBody (value : JsonValue) : BodyInit=
     #if DEBUG
@@ -51,7 +61,7 @@ type Fetch =
     ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     /// 
     /// **Output Type**
-    ///   * `JS.Promise<Result<'Response,string>>`
+    ///   * `JS.Promise<Result<'Response,FetchError>>`
     ///
     /// **Exceptions**
     ///
@@ -66,35 +76,48 @@ type Fetch =
                                               ?extra: ExtraCoders,
                                               [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                               [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
-        let headers = 
-            match data with
-            | Some _ -> ContentType "application/json" :: defaultArg headers []
-            | _ -> defaultArg headers []  
+        try
+            let headers = 
+                match data with
+                | Some _ -> ContentType "application/json" :: defaultArg headers []
+                | _ -> defaultArg headers []  
 
-        let properties =
-            [  Method <| defaultArg httpMethod HttpMethod.GET
-               requestHeaders headers ]
-            @ defaultArg properties []
-            @ (data 
-               |> Option.map (fun data ->
-                match encoder with
-                | Some encoder  -> [ data |> encoder |> toJsonBody |> Body ]
-                | _-> [ Fetch.toBody<'Data>(data, ?isCamelCase= isCamelCase, ?extra = extra, ?dataResolver = dataResolver) ]) 
-               |> Option.defaultValue [])  
+            let properties =
+                [  Method <| defaultArg httpMethod HttpMethod.GET
+                   requestHeaders headers ]
+                @ defaultArg properties []
+                @ (data 
+                   |> Option.map (fun data ->
+                    match encoder with
+                    | Some encoder  -> [ data |> encoder |> toJsonBody |> Body ]
+                    | _-> [ Fetch.toBody<'Data>(data, ?isCamelCase= isCamelCase, ?extra = extra, ?dataResolver = dataResolver) ]) 
+                   |> Option.defaultValue []) 
 
-        promise {
-            let! response = Fetch.fetch url properties
-            let! body = response.text()
-            let result =
-                if responseResolver.Value.ResolveType().FullName = typedefof<unit>.FullName 
-                then 
-                    Ok (unbox ())
-                else
-                    match decoder with
-                    | Some decoder -> Decode.fromString decoder body
-                    | _ -> Fetch.fromBody (body, ?isCamelCase= isCamelCase, ?extra = extra, ?responseResolver= responseResolver)
-            return result }
+            promise {
+                let! response = globalFetch url properties
+                   
+                let! body = response.text()
+                let result =
+                    if response.Ok then 
+                        if responseResolver.Value.ResolveType().FullName = typedefof<unit>.FullName 
+                        then 
+                            Ok (unbox ())
+                        else
+                            
+                            match decoder with
+                            | Some decoder -> Decode.fromString decoder body
+                            | _ -> Fetch.fromBody (body, ?isCamelCase= isCamelCase, ?extra = extra, ?responseResolver= responseResolver)
+                            |> function
+                               | Ok value -> Ok value
+                               | Error msg -> DecodingFailed msg |> Error 
+                    else
+                       if response.Status < 200 || response.Status >= 300 then
+                            BadStatus response |> Error
+                       else
+                            NetworkError |> Error
+                return result }
 
+        with | exn  -> promise { return PreparingRequestFailed exn |> Error }
    
     /// **Description**
     ///
@@ -139,7 +162,12 @@ type Fetch =
             let response =
                    match result with
                    | Ok response -> response
-                   | Error msg -> failwith msg
+                   | Error error ->
+                        match error with
+                        | PreparingRequestFailed exn -> raise exn
+                        | DecodingFailed msg -> failwith ("Decoding failed!\n\n" + msg)
+                        | BadStatus response -> failwith (string response.Status + " " + response.StatusText + " for URL " + response.Url)
+                        | NetworkError -> failwith "NetworkError"
             return response}
     
     /// **Description**
