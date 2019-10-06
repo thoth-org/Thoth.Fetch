@@ -292,7 +292,7 @@ Expecting an object with a field named `createdAt` but instead got:
     
         it "Fetch.tryFetchAs returns an error explaining why the auto decoder failed" <| fun d ->
             promise {
-                let! res = Fetch.tryFetchAs<_,Book>("http://localhost:3000/authors/1")
+                let! res = Fetch.tryFetchAs<_, Book>("http://localhost:3000/authors/1")
                 let expected =
                     Error(
                         """
@@ -378,7 +378,7 @@ Expecting an object with a field named `createdAt` but instead got:
 
         it "Fetch.get throw an exception explaining why the auto decoder failed" <| fun d ->
             promise {
-                let! _ = Fetch.get<_,Book>("http://localhost:3000/authors/1")
+                let! _ = Fetch.get<_, Book>("http://localhost:3000/authors/1")
                 d()
             }
             |> Promise.catch (fun error ->
@@ -456,7 +456,7 @@ Expecting an object with a field named `createdAt` but instead got:
 
         it "Fetch.tryGet returns an error explaining why the auto decoder failed" <| fun d ->
             promise {
-                let! res = Fetch.tryGet<_,Book>("http://localhost:3000/authors/1")
+                let! res = Fetch.tryGet<_, Book>("http://localhost:3000/authors/1")
                 let expected =
                     Error(
                         """
@@ -527,7 +527,7 @@ Expecting a datetime but instead got: undefined
             }
             |> Promise.catch d
             |> Promise.start
-            
+
         it "Fetch.post throw an exception explaining why the manual decoder failed" <| fun d ->
             promise {
                 let data =
@@ -568,13 +568,11 @@ Expecting an object with a field named `createdAt` but instead got:
             )
             |> Promise.catch d
             |> Promise.start
-
-
-    
+  
         it "Fetch.post throw an exception explaining why the auto decoder failed" <| fun d ->
             promise {
                 let data = {| name = "Brandon Sanderson" |}
-                let! _ = Fetch.post<_,Book>("http://localhost:3000/authors", data)
+                let! _ = Fetch.post<_, Book>("http://localhost:3000/authors", data)
                 d()
             }
             |> Promise.catch (fun error ->
@@ -592,7 +590,7 @@ Expecting a datetime but instead got: undefined
         it "Fetch.post works with unit response" <| fun d ->
             promise {
                 let data = {| mailto = "Maxime"|}
-                let! res = Fetch.post<_,unit>("http://localhost:3000/post/unit", data)
+                let! res = Fetch.post<_, unit>("http://localhost:3000/post/unit", data)
                 Assert.AreEqual(res, ())
                 d()
             } |> Promise.catch d
@@ -651,7 +649,7 @@ Expecting a datetime but instead got: undefined
         it "Fetch.tryPost throw an exception explaining why the auto decoder failed" <| fun d ->
             promise {
                 let data = {| name = "Brandon Sanderson" |}
-                let! res = Fetch.tryPost<_,Book>("http://localhost:3000/authors", data)
+                let! res = Fetch.tryPost<_, Book>("http://localhost:3000/authors", data)
 
                 let expected =
                     Error(
@@ -725,7 +723,7 @@ Expecting a datetime but instead got: undefined
                 let updatedBook =
                     { originalBook with UpdatedAt = Some now }
 
-                let! res = Fetch.put("http://localhost:3000/books/4", updatedBook, isCamelCase = false)
+                let! res = Fetch.put("http://localhost:3000/books/4", updatedBook, isCamelCase = true)
                 
                 Assert.AreEqual(res, updatedBook)
                 d()
@@ -779,7 +777,7 @@ Expecting an object with a field named `createdAt` but instead got:
         it "Fetch.put throw an exception explaining why the auto decoder failed" <| fun d ->
             promise {
                 let data = {| name = "Brandon Sanderson" |}
-                let! _ = Fetch.put<_,Book>("http://localhost:3000/authors/1", data)
+                let! _ = Fetch.put<_, Book>("http://localhost:3000/authors/1", data)
                 d()
             }
             |> Promise.catch (fun error ->
@@ -878,7 +876,7 @@ Expecting an object with a field named `createdAt` but instead got:
         it "Fetch.tryPut throw an exception explaining why the auto decoder failed" <| fun d ->
             promise {
                 let data = {| name = "Brandon Sanderson" |}
-                let! res = Fetch.tryPut<_,Book>("http://localhost:3000/authors/1", data)
+                let! res = Fetch.tryPut<_, Book>("http://localhost:3000/authors/1", data)
 
                 let expected =
                     Error(
@@ -896,7 +894,7 @@ Expecting a datetime but instead got: undefined
 
         it "Fetch.tryPut works with unit response" <| fun d ->
             promise {
-                let! res = Fetch.tryPut<_,unit>("http://localhost:3000/put/unit", null)
+                let! res = Fetch.tryPut<_, unit>("http://localhost:3000/put/unit", null)
                 let expected = Ok ()
                 Assert.AreEqual(res, expected)
                 d()
@@ -978,7 +976,7 @@ Expecting an object with a field named `createdAt` but instead got:
         it "Fetch.patch throw an exception explaining why the auto decoder failed" <| fun d ->
             promise {
                 let data = {| name = "Brandon Sanderson" |}
-                let! _ = Fetch.patch<_,Book>("http://localhost:3000/authors/1", data)
+                let! _ = Fetch.patch<_, Book>("http://localhost:3000/authors/1", data)
                 d()
             }
             |> Promise.catch (fun error ->
@@ -1077,7 +1075,7 @@ Expecting an object with a field named `createdAt` but instead got:
         it "Fetch.tryPatch throw an exception explaining why the auto decoder failed" <| fun d ->
             promise {
                 let data = {| name = "Brandon Sanderson" |}
-                let! res = Fetch.tryPatch<_,Book>("http://localhost:3000/authors/1", data)
+                let! res = Fetch.tryPatch<_, Book>("http://localhost:3000/authors/1", data)
 
                 let expected =
                     Error(
@@ -1095,7 +1093,7 @@ Expecting a datetime but instead got: undefined
 
         it "Fetch.tryPatch works with unit response" <| fun d ->
             promise {
-                let! res = Fetch.tryPatch<_,unit>("http://localhost:3000/patch/unit", null)
+                let! res = Fetch.tryPatch<_, unit>("http://localhost:3000/patch/unit", null)
                 let expected = Ok ()
                 Assert.AreEqual(res, expected)
                 d()
@@ -1169,7 +1167,7 @@ Expecting an object with a field named `createdAt` but instead got:
 
         it "Fetch.delete throw an exception explaining why the auto decoder failed" <| fun d ->
             promise {
-                let! _ = Fetch.delete<_,Book>("http://localhost:3000/fake-delete", null)
+                let! _ = Fetch.delete<_, Book>("http://localhost:3000/fake-delete", null)
                 d()
             }
             |> Promise.catch (fun error ->
@@ -1186,7 +1184,7 @@ Expecting a datetime but instead got: undefined
 
         it "Fetch.delete works with unit response" <| fun d ->
             promise {
-                let! res = Fetch.delete<_,unit>("http://localhost:3000/delete/unit", null)
+                let! res = Fetch.delete<_, unit>("http://localhost:3000/delete/unit", null)
                 Assert.AreEqual(res, ())
                 d()
             } |> Promise.catch d
@@ -1258,7 +1256,7 @@ Expecting an object with a field named `createdAt` but instead got:
 
         it "Fetch.tryDelete throw an exception explaining why the auto decoder failed" <| fun d ->
             promise {
-                let! res = Fetch.tryDelete<_,Book>("http://localhost:3000/fake-delete", null)
+                let! res = Fetch.tryDelete<_, Book>("http://localhost:3000/fake-delete", null)
                 let expected =
                     Error(
                         """
@@ -1274,7 +1272,7 @@ Expecting a datetime but instead got: undefined
 
         it "Fetch.tryDelete works with unit response" <| fun d ->
             promise {
-                let! res = Fetch.tryDelete<_,unit>("http://localhost:3000/delete/unit", null)
+                let! res = Fetch.tryDelete<_, unit>("http://localhost:3000/delete/unit", null)
                 let expected = Ok ()
                 Assert.AreEqual(res, expected)
                 d()
