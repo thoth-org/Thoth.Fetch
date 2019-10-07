@@ -62,7 +62,7 @@ type Fetch =
     ///   * `JS.Promise<Result<'Response,FetchError>>`
     ///
     /// **Exceptions**
-    ///
+    /// 
     static member tryFetchAs<'Data,'Response>(url : string,
                                               ?httpMethod : HttpMethod,
                                               ?data : 'Data,
