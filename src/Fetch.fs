@@ -39,20 +39,18 @@ type Fetch =
         
     /// **Description**
     ///
-    /// Retrieves data from the specified resource.
+    /// Send a request to the specified resource and apply a `decoder` to the response.
     ///
     /// A decoder will be generated or retrieved from the cache for the `'Response` type.
     ///
-    /// If the decoder succeed, we return `Ok 'Response`.
+    /// If fetch and decoding succeed, we return `Ok 'Response`.
     ///
-    /// If the decoder failed, we return `Error "explanation..."`
+    /// If we failed, we return `Error (FetchError)` containing an better explanation.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
-    ///   * `httpMethod` - optional parameter of type `HttpMethod` - HttpMethod used, defaults to GET
+    ///   * `httpMethod` - optional parameter of type `HttpMethod` - HttpMethod used for Request, defaults to **GET**
     ///   * `data` - optional parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
-    ///   * `decoder` - optional parameter of type `Decoder<'Response>`- Decoder applied to the server response
-    ///   * `encoder` - optional parameter of type `Encoder<'Data>`- Decoder applied to the server response
     ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
     ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch
     ///   * `isCamelCase` - optional parameter of type `bool` - Options passed to Thoth.Json to control JSON keys representation
@@ -68,8 +66,6 @@ type Fetch =
     static member tryFetchAs<'Data,'Response>(url : string,
                                               ?httpMethod : HttpMethod,
                                               ?data : 'Data,
-                                              ?decoder : Decoder<'Response>,
-                                              ?encoder : Encoder<'Data>,
                                               ?properties : RequestProperties list,
                                               ?headers : HttpRequestHeaders list,
                                               ?isCamelCase : bool,
@@ -88,9 +84,7 @@ type Fetch =
                 @ defaultArg properties []
                 @ (data 
                    |> Option.map (fun data ->
-                    match encoder with
-                    | Some encoder  -> [ data |> encoder |> toJsonBody |> Body ]
-                    | _-> [ Fetch.toBody<'Data>(data, ?isCamelCase= isCamelCase, ?extra = extra, ?dataResolver = dataResolver) ]) 
+                        [ Fetch.toBody<'Data>(data, ?isCamelCase= isCamelCase, ?extra = extra, ?dataResolver = dataResolver) ]) 
                    |> Option.defaultValue []) 
 
             promise {
@@ -102,9 +96,7 @@ type Fetch =
                         then 
                             Ok (unbox ())
                         else
-                            match decoder with
-                            | Some decoder -> Decode.fromString decoder body
-                            | _ -> Fetch.fromBody (body, ?isCamelCase= isCamelCase, ?extra = extra, ?responseResolver= responseResolver)
+                            Fetch.fromBody (body, ?isCamelCase= isCamelCase, ?extra = extra, ?responseResolver= responseResolver)
                             |> function
                                | Ok value -> Ok value
                                | Error msg -> DecodingFailed msg |> Error 
@@ -116,18 +108,20 @@ type Fetch =
    
     /// **Description**
     ///
-    /// Retrieves data from the specified resource.
+    /// Send a request to the specified resource and apply a `decoder` to the response.
     ///
-    /// A decoder will be generated or retrieved from the cache for the `'Response` type.
+    /// This method set the `ContentType` header to `"application/json"` if data is provided.
+    ///
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type 
+    ///
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type 
     ///
     /// An exception will be thrown if the decoder failed.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
-    ///   * `httpMethod` - optional parameter of type `HttpMethod` - HttpMethod used, defaults to GET
+    ///   * `httpMethod` - optional parameter of type `HttpMethod` - HttpMethod used, defaults to **GET**
     ///   * `data` - optional parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
-    ///   * `decoder` - optional parameter of type `Decoder<'Response>`- Decoder applied to the server response
-    ///   * `encoder` - optional parameter of type `Encoder<'Data>`- Decoder applied to the server response
     ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
     ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch
     ///   * `isCamelCase` - optional parameter of type `bool` - Options passed to Thoth.Json to control JSON keys representation
@@ -144,8 +138,6 @@ type Fetch =
     static member fetchAs<'Data,'Response>(url : string,
                                            ?httpMethod : HttpMethod,
                                            ?data : 'Data,
-                                           ?decoder : Decoder<'Response>,
-                                           ?encoder : Encoder<'Data>,
                                            ?properties : RequestProperties list,
                                            ?headers : HttpRequestHeaders list,
                                            ?isCamelCase : bool,
@@ -153,7 +145,7 @@ type Fetch =
                                            [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                            [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
         promise{
-            let! result = Fetch.tryFetchAs<'Data,'Response>(url, ?httpMethod = httpMethod, ?data = data, ?decoder = decoder, ?encoder = encoder, ?properties = properties, ?headers = headers, ?isCamelCase = isCamelCase, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+            let! result = Fetch.tryFetchAs<'Data,'Response>(url, ?httpMethod = httpMethod, ?data = data, ?properties = properties, ?headers = headers, ?isCamelCase = isCamelCase, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
             let response =
                    match result with
                    | Ok response -> response
@@ -167,21 +159,19 @@ type Fetch =
     
     /// **Description**
     ///
-    /// Send a **GET** request to the specified resource and apply the provided `decoder` to the response.
+    /// Send a **GET** request to the specified resource and apply a `decoder` to the response.
     ///
     /// This method set the `ContentType` header to `"application/json"` if data is provided.
     ///
-    /// An encoder will be generated or retrieved from the cache for the `'Data` type if required
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type 
     ///
-    /// A decoder will be generated or retrieved from the cache for the `'Response` type if required
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type 
     ///
     /// An exception will be thrown if the decoder failed.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
     ///   * `data` - optional parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
-    ///   * `decoder` - optional parameter of type `Decoder<'Response>`- Decoder applied to the server response
-    ///   * `encoder` - optional parameter of type `Encoder<'Data>`- Decoder applied to the server response
     ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
     ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch
     ///   * `isCamelCase` - optional parameter of type `bool` - Options passed to Thoth.Json to control JSON keys representation
@@ -197,33 +187,29 @@ type Fetch =
     ///
     static member get<'Data,'Response>(url : string,
                                          ?data : 'Data,
-                                         ?decoder : Decoder<'Response>,
-                                         ?encoder : Encoder<'Data>,
                                          ?properties : RequestProperties list,
                                          ?headers : HttpRequestHeaders list,
                                          ?isCamelCase : bool,
                                          ?extra: ExtraCoders,
                                          [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                          [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
-        Fetch.fetchAs(url, ?data= data, ?decoder = decoder, ?encoder = encoder, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+        Fetch.fetchAs(url, ?data= data, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
    
     /// **Description**
     ///
-    /// Send a **GET** request to the specified resource and apply the provided `decoder` to the response.
+    /// Send a **GET** request to the specified resource and apply a `decoder` to the response.
     ///
     /// This method set the `ContentType` header to `"application/json"`.
     ///
-    /// An encoder will be generated or retrieved from the cache for the `'Data` type if required
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type 
     ///
-    /// A decoder will be generated or retrieved from the cache for the `'Response` type if required
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type 
     ///
-    /// An exception will be thrown if the decoder failed.
+    /// If we failed, we return `Error (FetchError)` containing an better explanation.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
     ///   * `data` - optional parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
-    ///   * `decoder` - optional parameter of type `Decoder<'Response>`- Decoder applied to the server response
-    ///   * `encoder` - optional parameter of type `Encoder<'Data>`- Decoder applied to the server response
     ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
     ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch
     ///   * `isCamelCase` - optional parameter of type `bool` - Options passed to Thoth.Json to control JSON keys representation
@@ -232,39 +218,35 @@ type Fetch =
     ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     /// 
     /// **Output Type**
-    ///   * `JS.Promise<Result<'Response,string>>`
+    ///   * `JS.Promise<Result<'Response,FetchError>>`
     ///
     /// **Exceptions**
     ///
     static member tryGet<'Data,'Response>(url : string,
                                             ?data : 'Data,
-                                            ?decoder : Decoder<'Response>,
-                                            ?encoder : Encoder<'Data>,
                                             ?properties : RequestProperties list,
                                             ?headers : HttpRequestHeaders list,
                                             ?isCamelCase : bool,
                                             ?extra: ExtraCoders,
                                             [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                             [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
-        Fetch.tryFetchAs(url, ?data= data, ?decoder = decoder, ?encoder = encoder, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+        Fetch.tryFetchAs(url, ?data= data, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
     
     /// **Description**
     ///
-    /// Send a **POST** request to the specified resource and apply the provided `decoder` to the response.
+    /// Send a **POST** request to the specified resource and apply a `decoder` to the response.
     ///
     /// This method set the `ContentType` header to `"application/json"` if data is provided.
     ///
-    /// An encoder will be generated or retrieved from the cache for the `'Data` type if required
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type 
     ///
-    /// A decoder will be generated or retrieved from the cache for the `'Response` type if required
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type 
     ///
     /// An exception will be thrown if the decoder failed.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
     ///   * `data` - optional parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
-    ///   * `decoder` - optional parameter of type `Decoder<'Response>`- Decoder applied to the server response
-    ///   * `encoder` - optional parameter of type `Encoder<'Data>`- Decoder applied to the server response
     ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
     ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch
     ///   * `isCamelCase` - optional parameter of type `bool` - Options passed to Thoth.Json to control JSON keys representation
@@ -280,33 +262,29 @@ type Fetch =
     ///
     static member post<'Data, 'Response>(url : string,
                                           ?data : 'Data,
-                                          ?decoder : Decoder<'Response>,
-                                          ?encoder : Encoder<'Data>,
                                           ?properties : RequestProperties list,
                                           ?headers : HttpRequestHeaders list,
                                           ?isCamelCase : bool,
                                           ?extra: ExtraCoders,
                                           [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                           [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
-        Fetch.fetchAs(url, httpMethod = HttpMethod.POST, ?data= data, ?decoder = decoder, ?encoder = encoder, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+        Fetch.fetchAs(url, httpMethod = HttpMethod.POST, ?data= data, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
    
     /// **Description**
     ///
-    /// Send a **POST** request to the specified resource and apply the provided `decoder` to the response.
+    /// Send a **POST** request to the specified resource and apply a `decoder` to the response.
     ///
     /// This method set the `ContentType` header to `"application/json"`.
     ///
-    /// An encoder will be generated or retrieved from the cache for the `'Data` type if required
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type 
     ///
-    /// A decoder will be generated or retrieved from the cache for the `'Response` type if required
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type 
     ///
-    /// An exception will be thrown if the decoder failed.
+    /// If we failed, we return `Error (FetchError)` containing an better explanation.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
     ///   * `data` - optional parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
-    ///   * `decoder` - optional parameter of type `Decoder<'Response>`- Decoder applied to the server response
-    ///   * `encoder` - optional parameter of type `Encoder<'Data>`- Decoder applied to the server response
     ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
     ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch
     ///   * `isCamelCase` - optional parameter of type `bool` - Options passed to Thoth.Json to control JSON keys representation
@@ -315,39 +293,35 @@ type Fetch =
     ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     /// 
     /// **Output Type**
-    ///   * `JS.Promise<Result<'Response,string>>`
+    ///   * `JS.Promise<Result<'Response,FetchError>>`
     ///
     /// **Exceptions**
     ///
     static member tryPost<'Data,'Response>(url : string,
                                              ?data : 'Data,
-                                             ?decoder : Decoder<'Response>,
-                                             ?encoder : Encoder<'Data>,
                                              ?properties : RequestProperties list,
                                              ?headers : HttpRequestHeaders list,
                                              ?isCamelCase : bool,
                                              ?extra: ExtraCoders,
                                              [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                              [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
-        Fetch.tryFetchAs(url, httpMethod = HttpMethod.POST, ?data= data, ?decoder = decoder, ?encoder = encoder, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+        Fetch.tryFetchAs(url, httpMethod = HttpMethod.POST, ?data= data, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
     
     /// **Description**
     ///
-    /// Send a **PUT** request to the specified resource and apply the provided `decoder` to the response.
+    /// Send a **PUT** request to the specified resource and apply a `decoder` to the response.
     ///
     /// This method set the `ContentType` header to `"application/json"` if data is provided.
     ///
-    /// An encoder will be generated or retrieved from the cache for the `'Data` type if required
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type 
     ///
-    /// A decoder will be generated or retrieved from the cache for the `'Response` type if required
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type 
     ///
     /// An exception will be thrown if the decoder failed.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
     ///   * `data` - optional parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
-    ///   * `decoder` - optional parameter of type `Decoder<'Response>`- Decoder applied to the server response
-    ///   * `encoder` - optional parameter of type `Encoder<'Data>`- Decoder applied to the server response
     ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
     ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch
     ///   * `isCamelCase` - optional parameter of type `bool` - Options passed to Thoth.Json to control JSON keys representation
@@ -363,33 +337,29 @@ type Fetch =
     ///
     static member put<'Data,'Response>(url : string,
                                          ?data : 'Data,
-                                         ?decoder : Decoder<'Response>,
-                                         ?encoder : Encoder<'Data>,
                                          ?properties : RequestProperties list,
                                          ?headers : HttpRequestHeaders list,
                                          ?isCamelCase : bool,
                                          ?extra: ExtraCoders,
                                          [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                          [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
-        Fetch.fetchAs(url, httpMethod = HttpMethod.PUT, ?data= data, ?decoder = decoder, ?encoder = encoder, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+        Fetch.fetchAs(url, httpMethod = HttpMethod.PUT, ?data= data, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
    
     /// **Description**
     ///
-    /// Send a **PUT** request to the specified resource and apply the provided `decoder` to the response.
+    /// Send a **PUT** request to the specified resource and apply a `decoder` to the response.
     ///
     /// This method set the `ContentType` header to `"application/json"`.
     ///
-    /// An encoder will be generated or retrieved from the cache for the `'Data` type if required
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type 
     ///
-    /// A decoder will be generated or retrieved from the cache for the `'Response` type if required
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type 
     ///
-    /// An exception will be thrown if the decoder failed.
+    /// If we failed, we return `Error (FetchError)` containing an better explanation.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
     ///   * `data` - optional parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
-    ///   * `decoder` - optional parameter of type `Decoder<'Response>`- Decoder applied to the server response
-    ///   * `encoder` - optional parameter of type `Encoder<'Data>`- Decoder applied to the server response
     ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
     ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch
     ///   * `isCamelCase` - optional parameter of type `bool` - Options passed to Thoth.Json to control JSON keys representation
@@ -398,39 +368,35 @@ type Fetch =
     ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     /// 
     /// **Output Type**
-    ///   * `JS.Promise<Result<'Response,string>>`
+    ///   * `JS.Promise<Result<'Response,FetchError>>`
     ///
     /// **Exceptions**
     ///
     static member tryPut<'Data,'Response>(url : string,
                                             ?data : 'Data,
-                                            ?decoder : Decoder<'Response>,
-                                            ?encoder : Encoder<'Data>,
                                             ?properties : RequestProperties list,
                                             ?headers : HttpRequestHeaders list,
                                             ?isCamelCase : bool,
                                             ?extra: ExtraCoders,
                                             [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                             [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
-        Fetch.tryFetchAs(url, httpMethod = HttpMethod.PUT, ?data= data, ?decoder = decoder, ?encoder = encoder, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+        Fetch.tryFetchAs(url, httpMethod = HttpMethod.PUT, ?data= data, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
     
     /// **Description**
     ///
-    /// Send a **PATCH** request to the specified resource and apply the provided `decoder` to the response.
+    /// Send a **PATCH** request to the specified resource and apply a `decoder` to the response.
     ///
     /// This method set the `ContentType` header to `"application/json"` if data is provided.
     ///
-    /// An encoder will be generated or retrieved from the cache for the `'Data` type if required
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type 
     ///
-    /// A decoder will be generated or retrieved from the cache for the `'Response` type if required
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type 
     ///
     /// An exception will be thrown if the decoder failed.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
     ///   * `data` - optional parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
-    ///   * `decoder` - optional parameter of type `Decoder<'Response>`- Decoder applied to the server response
-    ///   * `encoder` - optional parameter of type `Encoder<'Data>`- Decoder applied to the server response
     ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
     ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch
     ///   * `isCamelCase` - optional parameter of type `bool` - Options passed to Thoth.Json to control JSON keys representation
@@ -446,33 +412,29 @@ type Fetch =
     ///
     static member patch<'Data,'Response>(url : string,
                                            ?data : 'Data,
-                                           ?decoder : Decoder<'Response>,
-                                           ?encoder : Encoder<'Data>,
                                            ?properties : RequestProperties list,
                                            ?headers : HttpRequestHeaders list,
                                            ?isCamelCase : bool,
                                            ?extra: ExtraCoders,
                                            [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                            [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
-        Fetch.fetchAs(url, httpMethod = HttpMethod.PATCH, ?data= data, ?decoder = decoder, ?encoder = encoder, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+        Fetch.fetchAs(url, httpMethod = HttpMethod.PATCH, ?data= data, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
    
     /// **Description**
     ///
-    /// Send a **PATCH** request to the specified resource and apply the provided `decoder` to the response.
+    /// Send a **PATCH** request to the specified resource and apply a `decoder` to the response.
     ///
     /// This method set the `ContentType` header to `"application/json"`.
     ///
-    /// An encoder will be generated or retrieved from the cache for the `'Data` type if required
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type 
     ///
-    /// A decoder will be generated or retrieved from the cache for the `'Response` type if required
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type 
     ///
-    /// An exception will be thrown if the decoder failed.
+    /// If we failed, we return `Error (FetchError)` containing an better explanation.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
     ///   * `data` - optional parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
-    ///   * `decoder` - optional parameter of type `Decoder<'Response>`- Decoder applied to the server response
-    ///   * `encoder` - optional parameter of type `Encoder<'Data>`- Decoder applied to the server response
     ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
     ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch
     ///   * `isCamelCase` - optional parameter of type `bool` - Options passed to Thoth.Json to control JSON keys representation
@@ -481,39 +443,35 @@ type Fetch =
     ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     /// 
     /// **Output Type**
-    ///   * `JS.Promise<Result<'Response,string>>`
+    ///   * `JS.Promise<Result<'Response,FetchError>>`
     ///
     /// **Exceptions**
     ///
     static member tryPatch<'Data,'Response>(url : string,
                                               ?data : 'Data,
-                                              ?decoder : Decoder<'Response>,
-                                              ?encoder : Encoder<'Data>,
                                               ?properties : RequestProperties list,
                                               ?headers : HttpRequestHeaders list,
                                               ?isCamelCase : bool,
                                               ?extra: ExtraCoders,
                                               [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                               [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
-        Fetch.tryFetchAs(url, httpMethod = HttpMethod.PATCH, ?data= data, ?decoder = decoder, ?encoder = encoder, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+        Fetch.tryFetchAs(url, httpMethod = HttpMethod.PATCH, ?data= data, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
     
     /// **Description**
     ///
-    /// Send a **DELETE** request to the specified resource and apply the provided `decoder` to the response.
+    /// Send a **DELETE** request to the specified resource and apply a `decoder` to the response.
     ///
     /// This method set the `ContentType` header to `"application/json"` if data is provided.
     ///
-    /// An encoder will be generated or retrieved from the cache for the `'Data` type if required
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type 
     ///
-    /// A decoder will be generated or retrieved from the cache for the `'Response` type if required
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type 
     ///
     /// An exception will be thrown if the decoder failed.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
     ///   * `data` - optional parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
-    ///   * `decoder` - optional parameter of type `Decoder<'Response>`- Decoder applied to the server response
-    ///   * `encoder` - optional parameter of type `Encoder<'Data>`- Decoder applied to the server response
     ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
     ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch
     ///   * `isCamelCase` - optional parameter of type `bool` - Options passed to Thoth.Json to control JSON keys representation
@@ -529,33 +487,29 @@ type Fetch =
     ///
     static member delete<'Data,'Response>(url : string,
                                             ?data : 'Data,
-                                            ?decoder : Decoder<'Response>,
-                                            ?encoder : Encoder<'Data>,
                                             ?properties : RequestProperties list,
                                             ?headers : HttpRequestHeaders list,
                                             ?isCamelCase : bool,
                                             ?extra: ExtraCoders,
                                             [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                             [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
-        Fetch.fetchAs(url, httpMethod = HttpMethod.DELETE, ?data= data, ?decoder = decoder, ?encoder = encoder, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+        Fetch.fetchAs(url, httpMethod = HttpMethod.DELETE, ?data= data, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
    
     /// **Description**
     ///
-    /// Send a **DELETE** request to the specified resource and apply the provided `decoder` to the response.
+    /// Send a **DELETE** request to the specified resource and apply a `decoder` to the response.
     ///
     /// This method set the `ContentType` header to `"application/json"`.
     ///
-    /// An encoder will be generated or retrieved from the cache for the `'Data` type if required
+    /// An encoder will be generated or retrieved from the cache for the `'Data` type 
     ///
-    /// A decoder will be generated or retrieved from the cache for the `'Response` type if required
+    /// A decoder will be generated or retrieved from the cache for the `'Response` type 
     ///
-    /// An exception will be thrown if the decoder failed.
+    /// If we failed, we return `Error (FetchError)` containing an better explanation.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
     ///   * `data` - optional parameter of type `'Data` - Data sent via the body, it will be converted to JSON before
-    ///   * `decoder` - optional parameter of type `Decoder<'Response>`- Decoder applied to the server response
-    ///   * `encoder` - optional parameter of type `Encoder<'Data>`- Decoder applied to the server response
     ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
     ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch
     ///   * `isCamelCase` - optional parameter of type `bool` - Options passed to Thoth.Json to control JSON keys representation
@@ -564,18 +518,16 @@ type Fetch =
     ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     ///
     /// **Output Type**
-    ///   * `JS.Promise<Result<'Response,string>>`
+    ///   * `JS.Promise<Result<'Response,FetchError>>`
     ///
     /// **Exceptions**
     ///
     static member tryDelete<'Data,'Response>(url : string,
                                                ?data : 'Data,
-                                               ?decoder : Decoder<'Response>,
-                                               ?encoder : Encoder<'Data>,
                                                ?properties : RequestProperties list,
                                                ?headers : HttpRequestHeaders list,
                                                ?isCamelCase : bool,
                                                ?extra: ExtraCoders,
                                                [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                                [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
-        Fetch.tryFetchAs(url, httpMethod = HttpMethod.DELETE, ?data= data, ?decoder = decoder, ?encoder = encoder, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+        Fetch.tryFetchAs(url, httpMethod = HttpMethod.DELETE, ?data= data, ?properties = properties, ?headers= headers, ?isCamelCase = isCamelCase, ?extra = extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
