@@ -56,6 +56,8 @@ type Book =
             "updatedAt", Encode.option Encode.datetime book.UpdatedAt
         ]
 
+let bookCoder = Extra.withCustom Book.Encoder Book.Decoder Extra.empty
+
 type Author =
     { Id : int
       Name : string }
@@ -128,6 +130,22 @@ describe "Thoth.Fetch" <| fun _ ->
         it "Fetch.fetchAs works with manual decoder" <| fun d ->
             promise {
                 let! res = Fetch.fetchAs("http://localhost:3000/books/1", Book.Decoder)
+                let expected =
+                    { Id = 1
+                      Title = "The Warded Man"
+                      Author = "Peter V. Brett"
+                      CreatedAt = databaseCreationDate
+                      UpdatedAt = None }
+
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.fetchAs works with extra coder" <| fun d ->
+            promise {
+                let! res = Fetch.fetchAs<Book>("http://localhost:3000/books/1", extra = bookCoder)
                 let expected =
                     { Id = 1
                       Title = "The Warded Man"
