@@ -10,7 +10,7 @@ module.exports = {
     editUrl : "https://github.com/thoth-org/Thoth.Fetch/edit/master/docs",
     title: "Thoth.Fetch",
     debug: true,
-    version: "1.1.0",
+    version: "2.0.0",
     navbar: {
         showVersion: true,
         links: [
