@@ -10,7 +10,7 @@ Thoth.Fetch provides an easy to use API for working with [Fable.Fetch](https://g
 
 For each method, it provide a ***safe*** and an ***unsafe*** version.
 
-We call ***safe*** a method which returns a `Result<'T, string>`.
+We call ***safe*** a method which returns a `Result<'T, FetchError>`.
 
 We call ***unsafe*** a method that will throw an exception when a coder fails.
 
@@ -34,7 +34,7 @@ List of "safe" methods:
 
 ### Example
 
-#### Define your decoder
+#### Define your decoder and encoders
 
 ```fsharp
 open Thoth.Fetch
@@ -58,6 +58,17 @@ type Book =
               CreatedAt = get.Required.Field "createdAt" Decode.datetime
               UpdatedAt = get.Optional.Field "updatedAt" Decode.datetime }
         )
+    /// Transform JSON as Book   
+    static member Encoder (book : Book)=
+        Encode.object [
+            "id", Encode.int book.Id
+            "title", Encode.string book.Title
+            "author", Encode.string book.Author
+            "createdAt", Encode.datetime book.CreatedAt
+            "updatedAt", Encode.option Encode.datetime book.UpdatedAt
+        ]
+
+let bookCoder: ExtraCoders = Extra.withCustom Book.Encoder Book.Decoder Extra.empty
 ```
 
 #### GET request
@@ -66,7 +77,7 @@ type Book =
 let getBookById (id : int) =
     promise {
         let url = sprintf "http://localhost:8080/books/%i" id
-        return! Fetch.get(url, Book.Decoder)
+        return! Fetch.get(url, extra = bookCoder)
     }
 ```
 
@@ -83,7 +94,7 @@ let createBook (book : Book) =
                 "createdAt", Encode.datetime book.CreatedAt
                 "updatedAt", Encode.option Encode.datetime book.UpdatedAt
             ]
-        return! Fetch.post(url, data, Book.Decoder)
+        return! Fetch.post(url, data, extra = bookCoder)
     }
 ```
 
@@ -101,19 +112,17 @@ let updateBook (book : Book) =
                 "createdAt", Encode.datetime book.CreatedAt
                 "updatedAt", Encode.option Encode.datetime book.UpdatedAt
             ]
-        return! Fetch.put(url, data, Book.Decoder)
+        return! Fetch.put(url, data, extra = bookCoder)
     }
 ```
 
 #### DELETE request
 
 ```fsharp
-let deleteBook (book : Book) =
+let deleteBook (book : Book) : JS.Promise<bool> =
     promise {
         let url = sprintf "http://localhost:8080/books/%i" book.Id
-        // We need to pass `null` to send no data
-        // Otherwise, F# compiler can't resolve the overload
-        return! Fetch.delete(url, null, Decode.bool)
+        return! Fetch.delete()
     }
 ```
 
@@ -233,9 +242,7 @@ let updateBook (book : Book) : JS.Promise<Book> =
 let deleteBook (book : Book) : JS.Promise<bool> =
     promise {
         let url = sprintf "http://localhost:8080/books/%i" book.Id
-        // We need to pass `null` to send no data
-        // Otherwise, F# compiler can't resolve the overload
-        return! Fetch.delete(url, null)
+        return! Fetch.delete(url)
     }
 ```
 
