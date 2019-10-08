@@ -17,26 +17,8 @@ type [<Erase>] GlobalFetch =
 let private globalFetch (url: string) (init: RequestProperties list) : JS.Promise<Response> =
     GlobalFetch.fetch(RequestInfo.Url url, requestProps init)
 
-let internal toJsonBody (value : JsonValue) : BodyInit=
-    #if DEBUG
-    Encode.toString 4 value
-    |> (!^)
-    #else
-    Encode.toString 0 value
-    |> (!^)
-    #endif
-
 type Fetch =
 
-    static member internal toBody<'Data>(data:'Data, ?isCamelCase:bool, ?extra:ExtraCoders, [<Inject>]?dataResolver: ITypeResolver<'Data>) =
-        let encode = Encode.Auto.generateEncoderCached<'Data>(?isCamelCase = isCamelCase, ?extra = extra, ?resolver = dataResolver)
-        encode data |> toJsonBody |> Body
-        
-        
-    static member internal fromBody<'Response>(value:string, ?isCamelCase:bool, ?extra:ExtraCoders, [<Inject>]?responseResolver: ITypeResolver<'Response>) =
-        let decoder = Decode.Auto.generateDecoderCached<'Response>(?isCamelCase = isCamelCase, ?extra = extra, ?resolver = responseResolver)
-        Decode.fromString decoder value 
-        
     /// **Description**
     ///
     /// Send a request to the specified resource and apply a `decoder` to the response.
@@ -45,7 +27,7 @@ type Fetch =
     ///
     /// If fetch and decoding succeed, we return `Ok 'Response`.
     ///
-    /// If we failed, we return `Error (FetchError)` containing an better explanation.
+    /// If we fail, we return `Error (FetchError)` containing an better explanation.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
@@ -84,7 +66,7 @@ type Fetch =
                 @ defaultArg properties []
                 @ (data 
                    |> Option.map (fun data ->
-                        [ Fetch.toBody<'Data>(data, ?isCamelCase= isCamelCase, ?extra = extra, ?dataResolver = dataResolver) ]) 
+                        [ Encode.Auto.toString (0, data, ?isCamelCase = isCamelCase, ?extra = extra, ?resolver = dataResolver) |> (!^) |> Body ]) 
                    |> Option.defaultValue []) 
 
             promise {
@@ -96,7 +78,7 @@ type Fetch =
                         then 
                             Ok (unbox ())
                         else
-                            Fetch.fromBody (body, ?isCamelCase= isCamelCase, ?extra = extra, ?responseResolver= responseResolver)
+                            Decode.Auto.fromString (body, ?isCamelCase = isCamelCase, ?extra = extra, ?resolver = responseResolver)
                             |> function
                                | Ok value -> Ok value
                                | Error msg -> DecodingFailed msg |> Error 
@@ -116,7 +98,7 @@ type Fetch =
     ///
     /// A decoder will be generated or retrieved from the cache for the `'Response` type 
     ///
-    /// An exception will be thrown if the decoder failed.
+    /// An exception will be thrown if fetch fails.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
@@ -145,7 +127,7 @@ type Fetch =
                                            [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                            [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
         promise{
-            let! result = Fetch.tryFetchAs<'Data,'Response>(url, ?httpMethod = httpMethod, ?data = data, ?properties = properties, ?headers = headers, ?isCamelCase = isCamelCase, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+            let! result = Fetch.tryFetchAs<'Data,'Response>(url, ?httpMethod = httpMethod, ?data = data, ?properties = properties, ?headers = headers, ?isCamelCase = isCamelCase, ?extra=extra, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
             let response =
                    match result with
                    | Ok response -> response
@@ -205,7 +187,7 @@ type Fetch =
     ///
     /// A decoder will be generated or retrieved from the cache for the `'Response` type 
     ///
-    /// If we failed, we return `Error (FetchError)` containing an better explanation.
+    /// If we fail, we return `Error (FetchError)` containing an better explanation.
     ///
     /// **Parameters**
     ///   * `url` - parameter of type `string` - URL to request
