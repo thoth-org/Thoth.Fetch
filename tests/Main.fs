@@ -1194,7 +1194,7 @@ Expecting a datetime but instead got: undefined
     describe "Errors" <| fun _ ->
         it "A 404 should be reported as Bad Status" <| fun d ->
             promise {
-                let! (Error(BadStatus res)) = Fetch.tryGet("http://localhost:3000/404")
+                let! (Error(FetchFailed res)) = Fetch.tryGet("http://localhost:3000/404")
                 let expected = 404
                 Assert.AreEqual(res.Status, expected)
                 d()
