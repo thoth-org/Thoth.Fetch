@@ -377,6 +377,44 @@ Expecting an object with a field named `author` but instead got:
             |> Promise.catch d
             |> Promise.start
 
+        it "Fetch.tryFetchAs returns an error explaining why the manual decoder failed" <| fun d ->
+            promise {
+                let! res = Fetch.tryFetchAs("http://localhost:3000/authors/1", Book.Decoder)
+                print res
+                let expected =
+                    Error(
+                        DecodingFailed(
+                            """
+The following errors were found:
+
+Error at: `$`
+Expecting an object with a field named `title` but instead got:
+{
+    "id": 1,
+    "name": "Peter V. Brett"
+}
+
+Error at: `$`
+Expecting an object with a field named `author` but instead got:
+{
+    "id": 1,
+    "name": "Peter V. Brett"
+}
+
+Error at: `$`
+Expecting an object with a field named `createdAt` but instead got:
+{
+    "id": 1,
+    "name": "Peter V. Brett"
+}
+                        """.Trim()
+                    ))
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start            
+
     
         it "Fetch.tryFetchAs returns an error explaining why the auto decoder failed" <| fun d ->
             promise {
@@ -396,6 +434,22 @@ Expecting a datetime but instead got: undefined
             |> Promise.start
 
     describe "Fetch.get" <| fun _ ->
+        it "Fetch.get works with manual decoder" <| fun d ->
+            promise {
+                let! res = Fetch.get("http://localhost:3000/books/1", decoder = Book.Decoder)
+                let expected =
+                    { Id = 1
+                      Title = "The Warded Man"
+                      Author = "Peter V. Brett"
+                      CreatedAt = databaseCreationDate
+                      UpdatedAt = None }
+
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
         it "Fetch.get works with extra coder" <| fun d ->
             promise {
                 let! res = Fetch.get("http://localhost:3000/books/1", extra = bookCoder)
@@ -495,6 +549,22 @@ Expecting a datetime but instead got: undefined
             |> Promise.start
 
     describe "Fetch.tryGet" <| fun _ ->
+        it "Fetch.tryGet works with manual decoder" <| fun d ->
+            promise {
+                let! res = Fetch.tryGet("http://localhost:3000/books/1", decoder = Book.Decoder)
+                let expected =
+                    Ok { Id = 1
+                         Title = "The Warded Man"
+                         Author = "Peter V. Brett"
+                         CreatedAt = databaseCreationDate
+                         UpdatedAt = None }
+
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
         it "Fetch.tryGet works with auto decoder" <| fun d ->
             promise {
                 let! res = Fetch.tryGet("http://localhost:3000/books/1", isCamelCase = true;)
@@ -559,7 +629,29 @@ Expecting a datetime but instead got: undefined
             |> Promise.start
 
     describe "Fetch.post" <| fun _ ->
-      
+        it "Fetch.post works with manual coder" <| fun d ->
+            promise {
+                let now = DateTime.UtcNow
+                let data =
+                    Encode.object [
+                        "title", Encode.string "The Amulet of Samarkand"
+                        "author", Encode.string "Jonathan Stroud"
+                        "createdAt", Encode.datetime now
+                    ]
+                let! res = Fetch.post("http://localhost:3000/books", data, decoder = Book.Decoder)
+                let expected =
+                    { Id = 3
+                      Title = "The Amulet of Samarkand"
+                      Author = "Jonathan Stroud"
+                      CreatedAt = now
+                      UpdatedAt = None }
+
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
         it "Fetch.post works with extra coder" <| fun d ->
             promise {
                 let now = DateTime.UtcNow
@@ -571,7 +663,7 @@ Expecting a datetime but instead got: undefined
                     ]
                 let! res = Fetch.post("http://localhost:3000/books", data, extra = bookCoder)
                 let expected =
-                    { Id = 3
+                    { Id = 4
                       Title = "The Amulet of Samarkand"
                       Author = "Jonathan Stroud"
                       CreatedAt = now
@@ -595,7 +687,7 @@ Expecting a datetime but instead got: undefined
 
                 let! res = Fetch.post("http://localhost:3000/books", data, isCamelCase = true)
                 let expected =
-                    { Id = 4
+                    { Id = 5
                       Title = "The Golem's Eye"
                       Author = "Jonathan Stroud"
                       CreatedAt = now
@@ -680,6 +772,28 @@ Expecting a datetime but instead got: undefined
             |> Promise.start
 
     describe "Fetch.tryPost" <| fun _ ->
+        it "Fetch.tryPost works with manual coder" <| fun d ->
+            promise {
+                let now = DateTime.UtcNow
+                let data =
+                    Encode.object [
+                        "title", Encode.string "The Amulet of Samarkand"
+                        "author", Encode.string "Jonathan Stroud"
+                        "createdAt", Encode.datetime now
+                    ]
+                let! res = Fetch.tryPost("http://localhost:3000/books", data, decoder = Book.Decoder)
+                let expected =
+                    Ok { Id = 6
+                         Title = "The Amulet of Samarkand"
+                         Author = "Jonathan Stroud"
+                         CreatedAt = now
+                         UpdatedAt = None }
+
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
         it "Fetch.tryPost works with extra coder" <| fun d ->
         promise {
             let now = DateTime.UtcNow
@@ -691,7 +805,7 @@ Expecting a datetime but instead got: undefined
                 ]
             let! res = Fetch.tryPost("http://localhost:3000/books", data,  extra = bookCoder)
             let expected =
-                Ok { Id = 5
+                Ok { Id = 7
                      Title = "The Amulet of Samarkand"
                      Author = "Jonathan Stroud"
                      CreatedAt = now
@@ -752,12 +866,25 @@ Expecting a datetime but instead got: undefined
 
  
     describe "Fetch.put" <| fun _ ->
-    
+        it "Fetch.put works with manual coder" <| fun d ->
+            promise {
+                let now = DateTime.UtcNow
+                let! originalBook = Fetch.fetchAs("http://localhost:3000/books/3", isCamelCase = true)
+                let updatedBook =
+                    { originalBook with UpdatedAt = Some now }
+
+                let! res = Fetch.put("http://localhost:3000/books/3", Book.Encoder updatedBook, decoder = Book.Decoder)
+
+                Assert.AreEqual(res, updatedBook)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start    
 
         it "Fetch.put works with extra coder" <| fun d ->
             promise {
                 let now = DateTime.UtcNow
-                let! originalBook = Fetch.fetchAs("http://localhost:3000/books/3",  isCamelCase = true)
+                let! originalBook = Fetch.fetchAs("http://localhost:3000/books/3", isCamelCase = true)
                 let updatedBook =
                     { originalBook with UpdatedAt = Some now }
 
@@ -859,14 +986,30 @@ Expecting a datetime but instead got: undefined
             |> Promise.start
 
     describe "Fetch.tryPut" <| fun _ ->
-        it "Fetch.tryPut works with extra coder" <| fun d ->
+        it "Fetch.tryPut works with manual coder" <| fun d ->
             promise {
                 let now = DateTime.UtcNow
                 let! originalBook = Fetch.fetchAs("http://localhost:3000/books/5", isCamelCase = true)
                 let updatedBook =
                     { originalBook with UpdatedAt = Some now }
 
-                let! res = Fetch.tryPut("http://localhost:3000/books/5", updatedBook, extra = bookCoder)
+                let! res = Fetch.tryPut("http://localhost:3000/books/5", Book.Encoder updatedBook, decoder = Book.Decoder)
+                let expected = Ok updatedBook
+
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.tryPut works with extra coder" <| fun d ->
+            promise {
+                let now = DateTime.UtcNow
+                let! originalBook = Fetch.fetchAs("http://localhost:3000/books/6", isCamelCase = true)
+                let updatedBook =
+                    { originalBook with UpdatedAt = Some now }
+
+                let! res = Fetch.tryPut("http://localhost:3000/books/6", updatedBook, extra = bookCoder)
                 let expected = Ok updatedBook
 
                 Assert.AreEqual(res, expected)
@@ -878,11 +1021,11 @@ Expecting a datetime but instead got: undefined
         it "Fetch.tryPut works with auto coder" <| fun d ->
             promise {
                 let now = DateTime.UtcNow
-                let! originalBook = Fetch.fetchAs("http://localhost:3000/books/5", isCamelCase = true)
+                let! originalBook = Fetch.fetchAs("http://localhost:3000/books/2", isCamelCase = true)
                 let updatedBook =
                     { originalBook with UpdatedAt = Some now }
 
-                let! res = Fetch.tryPut("http://localhost:3000/books/5", updatedBook, isCamelCase = true)
+                let! res = Fetch.tryPut("http://localhost:3000/books/2", updatedBook, isCamelCase = true)
                 let expected = Ok updatedBook
 
                 Assert.AreEqual(res, expected)
@@ -946,6 +1089,21 @@ Expecting a datetime but instead got: undefined
             |> Promise.start
 
     describe "Fetch.patch" <| fun _ ->
+        it "Fetch.patch works with manual coder" <| fun d ->
+            promise {
+                let now = DateTime.UtcNow
+                let! originalBook = Fetch.fetchAs("http://localhost:3000/books/3", isCamelCase = true)
+                let updatedBook =
+                    { originalBook with UpdatedAt = Some now }
+
+                let! res = Fetch.patch("http://localhost:3000/books/3", Book.Encoder updatedBook, decoder = Book.Decoder)
+
+                Assert.AreEqual(res, updatedBook)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
         it "Fetch.patch works with extra coder" <| fun d ->
             promise {
                 let now = DateTime.UtcNow
@@ -1032,6 +1190,22 @@ Expecting a datetime but instead got: undefined
             |> Promise.start
 
     describe "Fetch.tryPatch" <| fun _ ->
+        it "Fetch.tryPatch works with manual coder" <| fun d ->
+            promise {
+                let now = DateTime.UtcNow
+                let! originalBook = Fetch.fetchAs("http://localhost:3000/books/5", isCamelCase = true)
+                let updatedBook =
+                    { originalBook with UpdatedAt = Some now }
+
+                let! res = Fetch.tryPatch("http://localhost:3000/books/5", Book.Encoder updatedBook, decoder = Book.Decoder)
+                let expected = Ok updatedBook
+
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
         it "Fetch.tryPatch works with extra coder" <| fun d ->
             promise {
                 let now = DateTime.UtcNow
@@ -1119,6 +1293,17 @@ Expecting a datetime but instead got: undefined
             |> Promise.start
 
     describe "Fetch.delete" <| fun _ ->
+
+        it "Fetch.detele can be just simple" <| fun d ->
+            promise {
+                let! res = Fetch.delete("http://localhost:3000/fake-delete")
+                let expected = ()
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+    
         it "Fetch.delete works with extra coder" <| fun d ->
             promise {
                 let! res = Fetch.delete("http://localhost:3000/fake-delete", null, extra = fakeDeleteResponseCoder, isCamelCase = true)
