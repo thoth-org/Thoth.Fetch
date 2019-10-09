@@ -34,7 +34,7 @@ List of "safe" methods:
 
 ### Example
 
-#### Define your decoder and encoders
+#### Define your decoder, encoder, and extracoder
 
 ```fsharp
 open Thoth.Fetch
@@ -58,6 +58,7 @@ type Book =
               CreatedAt = get.Required.Field "createdAt" Decode.datetime
               UpdatedAt = get.Optional.Field "updatedAt" Decode.datetime }
         )
+        
     /// Transform JSON as Book   
     static member Encoder (book : Book)=
         Encode.object [
@@ -68,7 +69,8 @@ type Book =
             "updatedAt", Encode.option Encode.datetime book.UpdatedAt
         ]
 
-let bookCoder: ExtraCoders = Extra.withCustom Book.Encoder Book.Decoder Extra.empty
+let bookCoder: ExtraCoders = Extra.empty
+                             |> Extra.withCustom Book.Encoder Book.Decoder 
 ```
 
 #### GET request
@@ -77,7 +79,7 @@ let bookCoder: ExtraCoders = Extra.withCustom Book.Encoder Book.Decoder Extra.em
 let getBookById (id : int) =
     promise {
         let url = sprintf "http://localhost:8080/books/%i" id
-        return! Fetch.get(url, extra = bookCoder)
+        return! Fetch.get(url, decoder = Book.Decoder)
     }
 ```
 
@@ -94,7 +96,7 @@ let createBook (book : Book) =
                 "createdAt", Encode.datetime book.CreatedAt
                 "updatedAt", Encode.option Encode.datetime book.UpdatedAt
             ]
-        return! Fetch.post(url, data, extra = bookCoder)
+        return! Fetch.post(url, data, decoder = Book.Decoder)
     }
 ```
 
@@ -112,7 +114,7 @@ let updateBook (book : Book) =
                 "createdAt", Encode.datetime book.CreatedAt
                 "updatedAt", Encode.option Encode.datetime book.UpdatedAt
             ]
-        return! Fetch.put(url, data, extra = bookCoder)
+        return! Fetch.put(url, data, decoder = Book.Decoder)
     }
 ```
 
@@ -239,7 +241,7 @@ let updateBook (book : Book) : JS.Promise<Book> =
 #### DELETE request
 
 ```fsharp
-let deleteBook (book : Book) : JS.Promise<bool> =
+let deleteBook (book : Book) : JS.Promise<unit> =
     promise {
         let url = sprintf "http://localhost:8080/books/%i" book.Id
         return! Fetch.delete(url)
