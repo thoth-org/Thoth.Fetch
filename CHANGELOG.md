@@ -17,9 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 * Option to pass additional headers
 
-### Removed
-* Removed option to pass a decoder. Use `extra` coders instead
-
 ## 1.1.0 - 2019-09-03
 ### Added
 

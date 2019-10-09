@@ -8,7 +8,7 @@ open Thoth.Json
 open Node
 open System 
 
-(* let print =
+let print =
     function
     | Ok _ -> printfn "Ok"
     | Error (fetcherror) -> 
@@ -16,9 +16,9 @@ open System
           | NetworkError exn -> printfn "NetworkError %s" exn.Message
           | PreparingRequestFailed exn -> printfn "Prparing failed: '%s'" exn.Message
           | DecodingFailed msg ->  printfn "Decoding failed: '%s'" msg
-          | BadStatus state -> printfn "Bad status %i" state.Status
+          | FetchFailed state -> printfn "Bad status %i" state.Status
           
-let printExn (error:exn) = printfn "Error '%s'" error.Message *)
+let printExn (error:exn) = printfn "Error '%s'" error.Message 
 
 [<Global>]
 let it (msg: string) (f: (obj->unit)->unit): unit = jsNative
@@ -161,6 +161,22 @@ describe "Thoth.Fetch" <| fun _ ->
     // End of the set up
 
     describe "Fetch.fetchAs" <| fun _ ->
+        
+        it "Fetch.fetchAs works with manual decoder" <| fun d ->
+            promise {
+                let! res = Fetch.fetchAs("http://localhost:3000/books/1", Book.Decoder)
+                let expected =
+                    { Id = 1
+                      Title = "The Warded Man"
+                      Author = "Peter V. Brett"
+                      CreatedAt = databaseCreationDate
+                      UpdatedAt = None }
+
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
 
         it "Fetch.fetchAs works with extra coder" <| fun d ->
             promise {
@@ -192,7 +208,47 @@ describe "Thoth.Fetch" <| fun _ ->
                 d()
             }
             |> Promise.catch d
-            |> Promise.start      
+            |> Promise.start    
+
+        it "Fetch.fetchAs throw an exception explaining why the manual decoder failed" <| fun d ->
+            promise {
+                let! _ = Fetch.fetchAs("http://localhost:3000/authors/1", Book.Decoder)
+                d()
+            }
+            |> Promise.catch (fun error ->
+                printExn error
+                let expected =
+                    """
+Decoding failed!
+
+The following errors were found:
+
+Error at: `$`
+Expecting an object with a field named `title` but instead got:
+{
+    "id": 1,
+    "name": "Peter V. Brett"
+}
+
+Error at: `$`
+Expecting an object with a field named `author` but instead got:
+{
+    "id": 1,
+    "name": "Peter V. Brett"
+}
+
+Error at: `$`
+Expecting an object with a field named `createdAt` but instead got:
+{
+    "id": 1,
+    "name": "Peter V. Brett"
+}
+                    """.Trim()
+                Assert.AreEqual(error.Message, expected)
+                d()
+            )
+            |> Promise.catch d
+            |> Promise.start         
     
         it "Fetch.fetchAs throw an exception explaining why the extra coder failed" <| fun d ->
             promise {
@@ -251,6 +307,22 @@ Expecting a datetime but instead got: undefined
             |> Promise.start
 
     describe "Fetch.tryFetchAs" <| fun _ ->
+        it "Fetch.tryFetchAs works with manual decoder" <| fun d ->
+            promise {
+                let! res = Fetch.tryFetchAs("http://localhost:3000/books/1", Book.Decoder)
+                let expected =
+                    Ok { Id = 1
+                         Title = "The Warded Man"
+                         Author = "Peter V. Brett"
+                         CreatedAt = databaseCreationDate
+                         UpdatedAt = None }
+
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start    
+
         it "Fetch.tryFetchAs works with extra coder" <| fun d ->
             promise {
                 let! res = Fetch.tryFetchAs("http://localhost:3000/books/1", extra = bookCoder)
