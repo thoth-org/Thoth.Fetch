@@ -8,18 +8,6 @@ open Thoth.Json
 open Node
 open System 
 
-let print =
-    function
-    | Ok _ -> printfn "Ok"
-    | Error (fetcherror) -> 
-          match fetcherror with
-          | NetworkError exn -> printfn "NetworkError %s" exn.Message
-          | PreparingRequestFailed exn -> printfn "Prparing failed: '%s'" exn.Message
-          | DecodingFailed msg ->  printfn "Decoding failed: '%s'" msg
-          | FetchFailed state -> printfn "Bad status %i" state.Status
-          
-let printExn (error:exn) = printfn "Error '%s'" error.Message 
-
 [<Global>]
 let it (msg: string) (f: (obj->unit)->unit): unit = jsNative
 
@@ -417,7 +405,6 @@ Expecting an object with a field named `createdAt` but instead got:
         it "Fetch.tryFetchAs returns an error explaining why the auto decoder failed" <| fun d ->
             promise {
                 let! res = Fetch.tryFetchAs<_, Book>("http://localhost:3000/authors/1")
-                print res
                 let expected =
                     Error(
                         DecodingFailed(
