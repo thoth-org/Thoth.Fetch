@@ -216,7 +216,7 @@ describe "Thoth.Fetch" <| fun _ ->
                 d()
             }
             |> Promise.catch (fun error ->
-                printExn error
+               
                 let expected =
                     """
 Decoding failed!
@@ -355,7 +355,6 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch d
             |> Promise.start
 
-
         it "Fetch.tryFetchAs returns an error explaining why the extra coder failed" <| fun d ->
             promise {
                 let! res = Fetch.tryFetchAs<_, Author>("http://localhost:3000/authors/1", extra = brokenAuthorCoder, isCamelCase = true)
@@ -380,7 +379,6 @@ Expecting an object with a field named `author` but instead got:
         it "Fetch.tryFetchAs returns an error explaining why the manual decoder failed" <| fun d ->
             promise {
                 let! res = Fetch.tryFetchAs("http://localhost:3000/authors/1", Book.Decoder)
-                print res
                 let expected =
                     Error(
                         DecodingFailed(
@@ -419,6 +417,7 @@ Expecting an object with a field named `createdAt` but instead got:
         it "Fetch.tryFetchAs returns an error explaining why the auto decoder failed" <| fun d ->
             promise {
                 let! res = Fetch.tryFetchAs<_, Book>("http://localhost:3000/authors/1")
+                print res
                 let expected =
                     Error(
                         DecodingFailed(
@@ -1151,8 +1150,8 @@ Decoding failed!
 Error at: `$`
 Expecting an object with a field named `author` but instead got:
 {
-    "name": "Brandon Sanderson",
-    "id": 1
+    "id": 1,
+    "name": "Brandon Sanderson"
 }
                     """.Trim()
                 Assert.AreEqual(error.Message, expected)
@@ -1252,8 +1251,8 @@ Expecting a datetime but instead got: undefined
 Error at: `$`
 Expecting an object with a field named `author` but instead got:
 {
-    "name": "Brandon Sanderson",
-    "id": 1
+    "id": 1,
+    "name": "Brandon Sanderson"
 }
                         """.Trim()
                     ))
