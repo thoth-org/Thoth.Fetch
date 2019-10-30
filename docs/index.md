@@ -8,7 +8,7 @@ title: Thoth.Fetch
 
 Thoth.Fetch provides an easy to use API for working with [Fable.Fetch](https://github.com/fable-compiler/fable-fetch) and [Thoth.Json](https://mangelmaxime.github.io/Thoth/json/v3.html). It supports both manual and auto coders depending on your preferences.
 
-For each method, it provide a ***safe*** and an ***unsafe*** version.
+For each method, Thoth.Fetch provides a ***safe*** and ***unsafe*** version.
 
 We call ***safe*** a method which returns a `Result<'T, string>`.
 
@@ -119,9 +119,9 @@ let deleteBook (book : Book) =
 
 ## Auto coders
 
-You need to help F# type inference determine which type is expected.
+You need to help F# type inference to determine which type is expected.
 
-Here is two ways to do it, more exists but thuse are the simpler:
+Here are two ways to do it. There are other approaches but but these are simpler:
 
 ### Type via the promise result
 
