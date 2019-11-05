@@ -4,7 +4,7 @@ title: Thoth.Fetch
 
 [[toc]]
 
-Old documentation:
+Documentation for older versions can be found here:
 
 - [Version 1.x](/Thoth.Fetch/legacy/1.x.html)
 
