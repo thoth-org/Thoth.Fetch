@@ -81,13 +81,13 @@ module Helper =
     let message error =
         match error with
         | PreparingRequestFailed exn ->
-            "Preparing request failed!\n\n" + exn.Message
+            "[Thoth.Fetch] Request preparation failed:\n\n" + exn.Message
         | DecodingFailed msg ->
-            "Decoding failed!\n\n" + msg
+            "[Thoth.Fetch] Error while decoding the response:\n\n" + msg
         | FetchFailed response ->
-            "Fetch failed!\n\n" + string response.Status + " " + response.StatusText + " for URL " + response.Url
+            "[Thoth.Fetch] Request failed:\n\n" + string response.Status + " " + response.StatusText + " for URL " + response.Url
         | NetworkError exn ->
-            "Network Error!\n\n" + exn.Message
+            "[Thoth.Fetch] A network error occured:\n\n" + exn.Message
 
 open Helper
 

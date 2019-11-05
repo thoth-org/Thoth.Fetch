@@ -6,7 +6,7 @@ open Fable.Core.Testing
 open Thoth.Fetch
 open Thoth.Json
 open Node
-open System 
+open System
 
 [<Global>]
 let it (msg: string) (f: (obj->unit)->unit): unit = jsNative
@@ -32,7 +32,7 @@ type FakeDeleteResponse =
         )
     static member Encoder (r:FakeDeleteResponse) = failwith "NotImplemented"
 
-let fakeDeleteResponseCoder = Extra.withCustom FakeDeleteResponse.Encoder FakeDeleteResponse.Decoder Extra.empty 
+let fakeDeleteResponseCoder = Extra.withCustom FakeDeleteResponse.Encoder FakeDeleteResponse.Decoder Extra.empty
 
 type Book =
     { Id : int
@@ -149,7 +149,7 @@ describe "Thoth.Fetch" <| fun _ ->
     // End of the set up
 
     describe "Fetch.fetchAs" <| fun _ ->
-        
+
         it "Fetch.fetchAs works with manual decoder" <| fun d ->
             promise {
                 let! res = Fetch.fetchAs("http://localhost:3000/books/1", Book.Decoder)
@@ -180,7 +180,7 @@ describe "Thoth.Fetch" <| fun _ ->
                 d()
             }
             |> Promise.catch d
-            |> Promise.start                 
+            |> Promise.start
 
         it "Fetch.fetchAs works with auto decoder" <| fun d ->
             promise {
@@ -196,7 +196,7 @@ describe "Thoth.Fetch" <| fun _ ->
                 d()
             }
             |> Promise.catch d
-            |> Promise.start    
+            |> Promise.start
 
         it "Fetch.fetchAs throw an exception explaining why the manual decoder failed" <| fun d ->
             promise {
@@ -204,49 +204,10 @@ describe "Thoth.Fetch" <| fun _ ->
                 d()
             }
             |> Promise.catch (fun error ->
-               
+
                 let expected =
                     """
-Decoding failed!
-
-The following errors were found:
-
-Error at: `$`
-Expecting an object with a field named `title` but instead got:
-{
-    "id": 1,
-    "name": "Peter V. Brett"
-}
-
-Error at: `$`
-Expecting an object with a field named `author` but instead got:
-{
-    "id": 1,
-    "name": "Peter V. Brett"
-}
-
-Error at: `$`
-Expecting an object with a field named `createdAt` but instead got:
-{
-    "id": 1,
-    "name": "Peter V. Brett"
-}
-                    """.Trim()
-                Assert.AreEqual(error.Message, expected)
-                d()
-            )
-            |> Promise.catch d
-            |> Promise.start         
-    
-        it "Fetch.fetchAs throw an exception explaining why the extra coder failed" <| fun d ->
-            promise {
-                let! _ = Fetch.fetchAs("http://localhost:3000/authors/1", extra = bookCoder, isCamelCase = true)
-                d()
-            }
-            |> Promise.catch (fun error ->
-                let expected =
-                    """
-Decoding failed!
+[Thoth.Fetch] Error while decoding the response:
 
 The following errors were found:
 
@@ -276,7 +237,46 @@ Expecting an object with a field named `createdAt` but instead got:
             )
             |> Promise.catch d
             |> Promise.start
-        
+
+        it "Fetch.fetchAs throw an exception explaining why the extra coder failed" <| fun d ->
+            promise {
+                let! _ = Fetch.fetchAs("http://localhost:3000/authors/1", extra = bookCoder, isCamelCase = true)
+                d()
+            }
+            |> Promise.catch (fun error ->
+                let expected =
+                    """
+[Thoth.Fetch] Error while decoding the response:
+
+The following errors were found:
+
+Error at: `$`
+Expecting an object with a field named `title` but instead got:
+{
+    "id": 1,
+    "name": "Peter V. Brett"
+}
+
+Error at: `$`
+Expecting an object with a field named `author` but instead got:
+{
+    "id": 1,
+    "name": "Peter V. Brett"
+}
+
+Error at: `$`
+Expecting an object with a field named `createdAt` but instead got:
+{
+    "id": 1,
+    "name": "Peter V. Brett"
+}
+                    """.Trim()
+                Assert.AreEqual(error.Message, expected)
+                d()
+            )
+            |> Promise.catch d
+            |> Promise.start
+
         it "Fetch.fetchAs throw an exception explaining why the auto decoder failed" <| fun d ->
             promise {
                 let! _ = Fetch.fetchAs("http://localhost:3000/authors/1")
@@ -309,7 +309,7 @@ Expecting a datetime but instead got: undefined
                 d()
             }
             |> Promise.catch d
-            |> Promise.start    
+            |> Promise.start
 
         it "Fetch.tryFetchAs works with extra coder" <| fun d ->
             promise {
@@ -326,7 +326,7 @@ Expecting a datetime but instead got: undefined
             }
             |> Promise.catch d
             |> Promise.start
-        
+
         it "Fetch.tryFetchAs works with auto decoder" <| fun d ->
             promise {
                 let! res = Fetch.tryFetchAs("http://localhost:3000/books/1", isCamelCase = true)
@@ -399,9 +399,9 @@ Expecting an object with a field named `createdAt` but instead got:
                 d()
             }
             |> Promise.catch d
-            |> Promise.start            
+            |> Promise.start
 
-    
+
         it "Fetch.tryFetchAs returns an error explaining why the auto decoder failed" <| fun d ->
             promise {
                 let! res = Fetch.tryFetchAs<_, Book>("http://localhost:3000/authors/1")
@@ -475,7 +475,7 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch (fun error ->
                 let expected =
                     """
-Decoding failed!
+[Thoth.Fetch] Error while decoding the response:
 
 The following errors were found:
 
@@ -515,7 +515,7 @@ Expecting an object with a field named `createdAt` but instead got:
             |> Promise.catch (fun error ->
                 let expected =
                     """
-Decoding failed!
+[Thoth.Fetch] Error while decoding the response:
 
 Error at: `$.CreatedAt`
 Expecting a datetime but instead got: undefined
@@ -697,7 +697,7 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch (fun error ->
                 let expected =
                     """
-Decoding failed!
+[Thoth.Fetch] Error while decoding the response:
 
 The following errors were found:
 
@@ -727,7 +727,7 @@ Expecting an object with a field named `createdAt` but instead got:
             )
             |> Promise.catch d
             |> Promise.start
-  
+
         it "Fetch.post throw an exception explaining why the auto decoder failed" <| fun d ->
             promise {
                 let data = {| name = "Brandon Sanderson" |}
@@ -737,7 +737,7 @@ Expecting an object with a field named `createdAt` but instead got:
             |> Promise.catch (fun error ->
                 let expected =
                     """
-Decoding failed!
+[Thoth.Fetch] Error while decoding the response:
 
 Error at: `$.createdAt`
 Expecting a datetime but instead got: undefined
@@ -803,7 +803,7 @@ Expecting a datetime but instead got: undefined
         |> Promise.catch d
         |> Promise.start
 
-       
+
         it "Fetch.tryPost works with auto coder" <| fun d ->
             promise {
                 let now = DateTime.UtcNow
@@ -828,7 +828,7 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch d
             |> Promise.start
 
-      
+
         it "Fetch.tryPost throw an exception explaining why the auto decoder failed" <| fun d ->
             promise {
                 let data = {| name = "Brandon Sanderson" |}
@@ -850,7 +850,7 @@ Expecting a datetime but instead got: undefined
             |> Promise.start
 
 
- 
+
     describe "Fetch.put" <| fun _ ->
         it "Fetch.put works with manual coder" <| fun d ->
             promise {
@@ -865,7 +865,7 @@ Expecting a datetime but instead got: undefined
                 d()
             }
             |> Promise.catch d
-            |> Promise.start    
+            |> Promise.start
 
         it "Fetch.put works with extra coder" <| fun d ->
             promise {
@@ -891,7 +891,7 @@ Expecting a datetime but instead got: undefined
                     { originalBook with UpdatedAt = Some now }
 
                 let! res = Fetch.put("http://localhost:3000/books/4", updatedBook, isCamelCase = true)
-                
+
                 Assert.AreEqual(res, updatedBook)
                 d()
             }
@@ -912,7 +912,7 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch (fun error ->
                 let expected =
                     """
-Decoding failed!
+[Thoth.Fetch] Error while decoding the response:
 
 The following errors were found:
 
@@ -952,7 +952,7 @@ Expecting an object with a field named `createdAt` but instead got:
             |> Promise.catch (fun error ->
                 let expected =
                     """
-Decoding failed!
+[Thoth.Fetch] Error while decoding the response:
 
 Error at: `$.createdAt`
 Expecting a datetime but instead got: undefined
@@ -1132,7 +1132,7 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch (fun error ->
                 let expected =
                     """
-Decoding failed!
+[Thoth.Fetch] Error while decoding the response:
 
 Error at: `$`
 Expecting an object with a field named `author` but instead got:
@@ -1156,7 +1156,7 @@ Expecting an object with a field named `author` but instead got:
             |> Promise.catch (fun error ->
                 let expected =
                     """
-Decoding failed!
+[Thoth.Fetch] Error while decoding the response:
 
 Error at: `$.createdAt`
 Expecting a datetime but instead got: undefined
@@ -1289,7 +1289,7 @@ Expecting a datetime but instead got: undefined
             }
             |> Promise.catch d
             |> Promise.start
-    
+
         it "Fetch.delete works with extra coder" <| fun d ->
             promise {
                 let! res = Fetch.delete("http://localhost:3000/fake-delete", null, extra = fakeDeleteResponseCoder, isCamelCase = true)
@@ -1322,7 +1322,7 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch (fun error ->
                 let expected =
                     """
-Decoding failed!
+[Thoth.Fetch] Error while decoding the response:
 
 The following errors were found:
 
@@ -1364,7 +1364,7 @@ Expecting an object with a field named `createdAt` but instead got:
             |> Promise.catch (fun error ->
                 let expected =
                     """
-Decoding failed!
+[Thoth.Fetch] Error while decoding the response:
 
 Error at: `$.CreatedAt`
 Expecting a datetime but instead got: undefined
@@ -1444,7 +1444,7 @@ Expecting a datetime but instead got: undefined
             }
             |> Promise.catch d
             |> Promise.start
- 
+
         it "A failing encoder should be detected" <| fun d ->
             promise {
                 let data = { Id = 1; Name = "Alfonso" }
