@@ -208,7 +208,7 @@ type Fetch =
     ///   * `System.Exception` - Contains information explaining why the request failed
     ///
     static member get<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
-                                         ?headers: HttpRequestHeaders list, ?isCamelCase: bool, ?cacheAutoCoders: bool,
+                                         ?headers: HttpRequestHeaders list, ?isCamelCase: bool, 
                                          ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
                                          [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                          [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
@@ -275,7 +275,7 @@ type Fetch =
     ///   * `System.Exception` - Contains information explaining why the request failed
     ///
     static member post<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
-                                          ?headers: HttpRequestHeaders list, ?isCamelCase: bool, ?cacheAutoCoders: bool,
+                                          ?headers: HttpRequestHeaders list, ?isCamelCase: bool, 
                                           ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
                                           [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                           [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
@@ -344,7 +344,7 @@ type Fetch =
     ///   * `System.Exception` - Contains information explaining why the request failed
     ///
     static member put<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
-                                         ?headers: HttpRequestHeaders list, ?isCamelCase: bool, ?cacheAutoCoders: bool,
+                                         ?headers: HttpRequestHeaders list, ?isCamelCase: bool, 
                                          ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
                                          [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                          [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
@@ -413,7 +413,7 @@ type Fetch =
     ///   * `System.Exception` - Contains information explaining why the request failed
     ///
     static member patch<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
-                                           ?headers: HttpRequestHeaders list, ?isCamelCase: bool, ?cacheAutoCoders: bool,
+                                           ?headers: HttpRequestHeaders list, ?isCamelCase: bool, 
                                            ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
                                            [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                            [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
