@@ -133,7 +133,8 @@ type Fetch =
 
             promise {
                 let! response = fetch url properties
-                return! resolve response isCamelCase extra decoder responseResolver }
+                return! resolve response isCamelCase extra decoder responseResolver
+            }
             |> Promise.catch (NetworkError >> Error)
 
         with exn -> promise { return PreparingRequestFailed exn |> Error }
