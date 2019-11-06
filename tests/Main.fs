@@ -1280,9 +1280,30 @@ Expecting a datetime but instead got: undefined
 
     describe "Fetch.delete" <| fun _ ->
 
-        it "Fetch.detele can be just simple" <| fun d ->
+        it "Fetch.delete is an invalid unit response if a non-empty body is returned" <| fun d ->
             promise {
-                let! res = Fetch.delete("http://localhost:3000/fake-delete")
+                let! res = Fetch.delete<_,unit>("http://localhost:3000/fake-delete")
+                d()
+            }
+            |> Promise.catch (fun error ->
+                let expected =
+                    """
+[Thoth.Fetch] Error while handling a `unit` response please provide an empty body or a valid JSON representation of unit:
+
+Error at: `$`
+Expecting null but instead got: {
+    "isSuccess": true
+}
+                    """.Trim()
+                Assert.AreEqual(error.Message, expected)
+                d()
+            )
+            |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.delete is a valid unit response independently of the body if configured to skip the body validation" <| fun d ->
+            promise {
+                let! res = Fetch.delete("http://localhost:3000/fake-delete", skipBodyValidationForUnit = true)
                 let expected = ()
                 Assert.AreEqual(res, expected)
                 d()

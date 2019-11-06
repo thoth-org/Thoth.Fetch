@@ -4,9 +4,11 @@ open Fetch
 open Fable.Core
 open Fable.Core.JsInterop
 open Thoth.Json
+open System
 
-type FetchError =
+type FetchError<'Response> =
     | PreparingRequestFailed of exn
+    | UnitDecodingFailed of string
     | DecodingFailed of string
     | FetchFailed of Response
     | NetworkError of exn
@@ -48,12 +50,19 @@ module Helper =
         |> Option.map ((@) properties)
         |> Option.defaultValue properties
 
-    let eitherUnit (responseResolver: ITypeResolver<'Response>) cont =
-        if responseResolver.ResolveType().FullName = typedefof<unit>.FullName then Ok(unbox())
+    let eitherUnit (responseResolver: ITypeResolver<'Response>) (skipBodyValidationForUnit : bool) (body : string) cont =
+        if responseResolver.ResolveType().FullName = typedefof<unit>.FullName then
+            if skipBodyValidationForUnit then
+                Ok(unbox())
+            else
+                if String.IsNullOrEmpty body then
+                    Ok(unbox())
+                else
+                    cont()
         else cont()
 
     let resolve (response: Response) isCamelCase extra (decoder: Decoder<'Response> option)
-        (responseResolver: ITypeResolver<'Response> option) =
+        (skipBodyValidationForUnit : bool option) (responseResolver: ITypeResolver<'Response> option) =
 
         let decoder =
             decoder
@@ -63,16 +72,22 @@ module Helper =
 
         let decode body = Decode.fromString decoder body
 
-        let eitherUnitOr = eitherUnit responseResolver.Value
+        let skipBodyValidationForUnit = defaultArg skipBodyValidationForUnit false
+
+        let eitherUnitOr = eitherUnit responseResolver.Value skipBodyValidationForUnit
 
         promise {
             let! body = response.text()
             let result =
                 if response.Ok then
-                    eitherUnitOr <| fun () ->
+                    eitherUnitOr body <| fun () ->
                         match decode body with
                         | Ok value -> Ok value
-                        | Error msg -> DecodingFailed msg |> Error
+                        | Error msg ->
+                            if responseResolver.Value.ResolveType().FullName = typedefof<unit>.FullName then
+                                UnitDecodingFailed msg |> Error
+                            else
+                                DecodingFailed msg |> Error
                 else
                     FetchFailed response |> Error
             return result
@@ -82,6 +97,8 @@ module Helper =
         match error with
         | PreparingRequestFailed exn ->
             "[Thoth.Fetch] Request preparation failed:\n\n" + exn.Message
+        | UnitDecodingFailed msg ->
+            "[Thoth.Fetch] Error while handling a `unit` response please provide an empty body or a valid JSON representation of unit:\n\n" + msg
         | DecodingFailed msg ->
             "[Thoth.Fetch] Error while decoding the response:\n\n" + msg
         | FetchFailed response ->
@@ -121,7 +138,7 @@ type Fetch =
     static member tryFetchAs<'Data, 'Response> (url: string, ?decoder: Decoder<'Response>, ?data: 'Data,
                                                 ?httpMethod: HttpMethod, ?properties: RequestProperties list,
                                                 ?headers: HttpRequestHeaders list, ?isCamelCase: bool,
-                                                ?extra: ExtraCoders,
+                                                ?extra: ExtraCoders, ?skipBodyValidationForUnit : bool,
                                                 [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                                 [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
         try
@@ -133,7 +150,7 @@ type Fetch =
 
             promise {
                 let! response = fetch url properties
-                return! resolve response isCamelCase extra decoder responseResolver
+                return! resolve response isCamelCase extra decoder skipBodyValidationForUnit responseResolver
             }
             |> Promise.catch (NetworkError >> Error)
 
@@ -168,12 +185,13 @@ type Fetch =
     static member fetchAs<'Data, 'Response> (url: string, ?decoder: Decoder<'Response>, ?data: 'Data,
                                              ?httpMethod: HttpMethod, ?properties: RequestProperties list,
                                              ?headers: HttpRequestHeaders list, ?isCamelCase: bool, ?extra: ExtraCoders,
+                                             ?skipBodyValidationForUnit : bool,
                                              [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                              [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
         promise {
             let! result = Fetch.tryFetchAs<'Data, 'Response>
                               (url, ?decoder = decoder, ?httpMethod = httpMethod, ?data = data, ?properties = properties,
-                               ?headers = headers, ?isCamelCase = isCamelCase, ?extra = extra,
+                               ?headers = headers, ?isCamelCase = isCamelCase, ?extra = extra, ?skipBodyValidationForUnit = skipBodyValidationForUnit,
                                ?responseResolver = responseResolver, ?dataResolver = dataResolver)
             let response =
                 match result with
@@ -208,13 +226,14 @@ type Fetch =
     ///   * `System.Exception` - Contains information explaining why the request failed
     ///
     static member get<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
-                                         ?headers: HttpRequestHeaders list, ?isCamelCase: bool, 
+                                         ?headers: HttpRequestHeaders list, ?isCamelCase: bool,
                                          ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
+                                         ?skipBodyValidationForUnit : bool,
                                          [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                          [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
         Fetch.fetchAs
             (url, ?data = data, ?properties = properties, ?headers = headers, ?isCamelCase = isCamelCase, ?extra = extra,
-             ?decoder = decoder, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+             ?decoder = decoder, ?skipBodyValidationForUnit = skipBodyValidationForUnit, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
 
     /// **Description**
     ///
@@ -242,12 +261,12 @@ type Fetch =
     ///
     static member tryGet<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                             ?headers: HttpRequestHeaders list, ?isCamelCase: bool, ?extra: ExtraCoders,
-                                            ?decoder: Decoder<'Response>,
+                                            ?decoder: Decoder<'Response>, ?skipBodyValidationForUnit : bool,
                                             [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                             [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
         Fetch.tryFetchAs
             (url, ?data = data, ?properties = properties, ?headers = headers, ?isCamelCase = isCamelCase, ?extra = extra,
-             ?decoder = decoder, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+             ?decoder = decoder, ?skipBodyValidationForUnit = skipBodyValidationForUnit, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
 
     /// **Description**
     ///
@@ -275,13 +294,14 @@ type Fetch =
     ///   * `System.Exception` - Contains information explaining why the request failed
     ///
     static member post<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
-                                          ?headers: HttpRequestHeaders list, ?isCamelCase: bool, 
+                                          ?headers: HttpRequestHeaders list, ?isCamelCase: bool,
                                           ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
+                                          ?skipBodyValidationForUnit : bool,
                                           [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                           [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
         Fetch.fetchAs
             (url, httpMethod = HttpMethod.POST, ?data = data, ?properties = properties, ?headers = headers,
-             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
+             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?skipBodyValidationForUnit = skipBodyValidationForUnit, ?responseResolver = responseResolver,
              ?dataResolver = dataResolver)
 
     /// **Description**
@@ -310,12 +330,12 @@ type Fetch =
     ///
     static member tryPost<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                              ?headers: HttpRequestHeaders list, ?isCamelCase: bool, ?extra: ExtraCoders,
-                                             ?decoder: Decoder<'Response>,
+                                             ?decoder: Decoder<'Response>, ?skipBodyValidationForUnit : bool,
                                              [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                              [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
         Fetch.tryFetchAs
             (url, httpMethod = HttpMethod.POST, ?data = data, ?properties = properties, ?headers = headers,
-             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
+             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?skipBodyValidationForUnit = skipBodyValidationForUnit, ?responseResolver = responseResolver,
              ?dataResolver = dataResolver)
 
     /// **Description**
@@ -344,13 +364,14 @@ type Fetch =
     ///   * `System.Exception` - Contains information explaining why the request failed
     ///
     static member put<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
-                                         ?headers: HttpRequestHeaders list, ?isCamelCase: bool, 
+                                         ?headers: HttpRequestHeaders list, ?isCamelCase: bool,
                                          ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
+                                         ?skipBodyValidationForUnit : bool,
                                          [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                          [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
         Fetch.fetchAs
             (url, httpMethod = HttpMethod.PUT, ?data = data, ?properties = properties, ?headers = headers,
-             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
+             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?skipBodyValidationForUnit = skipBodyValidationForUnit, ?responseResolver = responseResolver,
              ?dataResolver = dataResolver)
 
     /// **Description**
@@ -379,12 +400,12 @@ type Fetch =
     ///
     static member tryPut<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                             ?headers: HttpRequestHeaders list, ?isCamelCase: bool, ?extra: ExtraCoders,
-                                            ?decoder: Decoder<'Response>,
+                                            ?decoder: Decoder<'Response>, ?skipBodyValidationForUnit : bool,
                                             [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                             [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
         Fetch.tryFetchAs
             (url, httpMethod = HttpMethod.PUT, ?data = data, ?properties = properties, ?headers = headers,
-             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
+             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?skipBodyValidationForUnit = skipBodyValidationForUnit, ?responseResolver = responseResolver,
              ?dataResolver = dataResolver)
 
     /// **Description**
@@ -413,13 +434,14 @@ type Fetch =
     ///   * `System.Exception` - Contains information explaining why the request failed
     ///
     static member patch<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
-                                           ?headers: HttpRequestHeaders list, ?isCamelCase: bool, 
+                                           ?headers: HttpRequestHeaders list, ?isCamelCase: bool,
                                            ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
+                                           ?skipBodyValidationForUnit : bool,
                                            [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                            [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
         Fetch.fetchAs
             (url, httpMethod = HttpMethod.PATCH, ?data = data, ?properties = properties, ?headers = headers,
-             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
+             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?skipBodyValidationForUnit = skipBodyValidationForUnit, ?responseResolver = responseResolver,
              ?dataResolver = dataResolver)
 
     /// **Description**
@@ -448,12 +470,12 @@ type Fetch =
     ///
     static member tryPatch<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                               ?headers: HttpRequestHeaders list, ?isCamelCase: bool, ?extra: ExtraCoders,
-                                              ?decoder: Decoder<'Response>,
+                                              ?decoder: Decoder<'Response>, ?skipBodyValidationForUnit : bool,
                                               [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                               [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
         Fetch.tryFetchAs
             (url, httpMethod = HttpMethod.PATCH, ?data = data, ?properties = properties, ?headers = headers,
-             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
+             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?skipBodyValidationForUnit = skipBodyValidationForUnit, ?responseResolver = responseResolver,
              ?dataResolver = dataResolver)
 
     /// **Description**
@@ -483,12 +505,12 @@ type Fetch =
     ///
     static member delete<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                             ?headers: HttpRequestHeaders list, ?isCamelCase: bool, ?extra: ExtraCoders,
-                                            ?decoder: Decoder<'Response>,
+                                            ?decoder: Decoder<'Response>, ?skipBodyValidationForUnit : bool,
                                             [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                             [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
         Fetch.fetchAs
             (url, httpMethod = HttpMethod.DELETE, ?data = data, ?properties = properties, ?headers = headers,
-             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
+             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?skipBodyValidationForUnit = skipBodyValidationForUnit, ?responseResolver = responseResolver,
              ?dataResolver = dataResolver)
 
     /// **Description**
@@ -518,9 +540,10 @@ type Fetch =
     static member tryDelete<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                                ?headers: HttpRequestHeaders list, ?isCamelCase: bool,
                                                ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
+                                               ?skipBodyValidationForUnit : bool,
                                                [<Inject>] ?responseResolver: ITypeResolver<'Response>,
                                                [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
         Fetch.tryFetchAs
             (url, httpMethod = HttpMethod.DELETE, ?data = data, ?properties = properties, ?headers = headers,
-             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
+             ?isCamelCase = isCamelCase, ?extra = extra, ?decoder = decoder, ?skipBodyValidationForUnit = skipBodyValidationForUnit, ?responseResolver = responseResolver,
              ?dataResolver = dataResolver)
