@@ -178,16 +178,22 @@ let pushNuget (newVersion: string) (projFile: string) =
                 Common = { p.Common with DotNetCliPath = "dotnet" } } )
             projFile
 
-        let files =
+        let file =
             Directory.GetFiles(projDir </> "bin" </> "Release", "*.nupkg")
             |> Array.find (fun nupkg -> nupkg.Contains(newVersion))
-            |> fun x -> [x]
 
-        Paket.pushFiles (fun o ->
-            { o with ApiKey = nugetKey
-                     PublishUrl = "https://www.nuget.org/api/v2/package"
-                     WorkingDir = __SOURCE_DIRECTORY__ })
-            files
+        run
+            "dotnet"
+            root
+            [
+                "paket"
+                "push"
+                "--url"
+                "https://www.nuget.org/api/v2/package"
+                "--api-key"
+                nugetKey
+                file
+            ]
 
 Target.create "Publish" (fun _ ->
     let version = getLastVersion()

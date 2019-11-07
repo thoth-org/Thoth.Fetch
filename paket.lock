@@ -194,7 +194,7 @@ NUGET
       System.Security.AccessControl (>= 4.6)
       System.Security.Principal.Windows (>= 4.6)
     Mono.Posix.NETStandard (1.0)
-    MSBuild.StructuredLogger (2.0.110)
+    MSBuild.StructuredLogger (2.0.152)
       Microsoft.Build (>= 15.8.166)
       Microsoft.Build.Framework (>= 15.8.166)
       Microsoft.Build.Tasks.Core (>= 15.8.166)
