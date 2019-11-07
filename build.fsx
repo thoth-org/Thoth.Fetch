@@ -214,11 +214,11 @@ Target.create "Release" (fun _ ->
         | s when not (String.IsNullOrWhiteSpace s) -> s
         | _ -> failwith "The Github token must be set in a GITHUB_TOKEN environmental variable"
 
-    let nupkg =
-        let projDir = Path.GetDirectoryName(projectFile)
+    // let nupkg =
+    //     let projDir = Path.GetDirectoryName(projectFile)
 
-        Directory.GetFiles(projDir </> "bin" </> "Release", "*.nupkg")
-        |> Array.find (fun nupkg -> nupkg.Contains(version))
+    //     Directory.GetFiles(projDir </> "bin" </> "Release", "*.nupkg")
+    //     |> Array.find (fun nupkg -> nupkg.Contains(version))
 
     GitHub.createClientWithToken token
     |> GitHub.draftNewRelease gitOwner repoName version (isPreRelease version) (getNotes version)
