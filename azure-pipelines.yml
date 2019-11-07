@@ -14,9 +14,11 @@ strategy:
 
 trigger:
 - master
+- develop
 
 pr:
 - master
+- develop
 
 pool:
   vmImage: $(imageName)
@@ -26,6 +28,9 @@ steps:
   inputs:
     versionSpec: '10.x'
   displayName: 'Install Node.js'
+- task: DotNetCoreInstaller@1
+  inputs:
+    version: '3.0.100'
 
 # Linux and macOS
 - script: ./fake.sh build -t MochaTest

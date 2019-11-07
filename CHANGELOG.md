@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 
+## 2.0.0-beta-001 - 2019-11-07
+### Changed
+* Fix #9: Data is now optional for all http methods including **GET** (by @SCullman)
+* Fix #11: Decoders/ encoders are not cached within Json.Fetch (by @SCullman)
+* Fix #7: Better error reports with `FetchError` (by @SCullman)
+* Fix #5: Response type can now be `unit` (by @SCullman)
+
+### Added
+* Fix #8: Option to pass additional headers (by @SCullman)
+
 ## 1.1.0 - 2019-09-03
 ### Added
 
