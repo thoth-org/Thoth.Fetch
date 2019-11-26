@@ -108,6 +108,9 @@ let fakeDeleteHandler : obj = jsNative
 [<Import("default", "./fake-unit.js")>]
 let fakeUnitHandler : obj = jsNative
 
+[<Import("default", "./fake-error-report.js")>]
+let fakeErrorReportHandler : obj = jsNative
+
 Node.Api.``global``?fetch <- import "*" "node-fetch"
 
 describe "Thoth.Fetch" <| fun _ ->
@@ -140,6 +143,7 @@ describe "Thoth.Fetch" <| fun _ ->
         server?delete("/delete/unit", fakeUnitHandler)
         server?put("/put/unit", fakeUnitHandler)
         server?patch("/patch/unit", fakeUnitHandler)
+        server?``get``("/get/fake-error-report", fakeErrorReportHandler)
         server?``use``(jsonServer?router(dbFile))
         serverInstance <- server?listen(3000, !!ignore)
 
@@ -1461,6 +1465,19 @@ Expecting a datetime but instead got: undefined
             promise {
                 let! (Error(NetworkError exn)) = Fetch.tryFetchAs("http://just.wrong")
                 Assert.AreEqual (isNull exn, false)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
+        it "Body should not be consumed for non success status codes" <| fun d ->
+            promise {
+                let!  (Error(FetchFailed response)) = Fetch.tryFetchAs("http://localhost:3000/get/fake-error-report")
+                Assert.AreEqual(response.bodyUsed, false)
+
+                let! text = response.text ()
+                Assert.AreEqual (text.Contains("reason"), true)
+                Assert.AreEqual (text.Contains("This always fails."), true)
                 d()
             }
             |> Promise.catch d
