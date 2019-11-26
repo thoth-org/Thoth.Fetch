@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 
+## 2.0.0-beta-002 - 2019-11-26
+### Fixed
+* Fix #13: Only consume body when http code doesn't cause immediate rejection (by @WalternativE)
+
 ## 2.0.0-beta-001 - 2019-11-07
 ### Changed
 * Fix #9: Data is now optional for all http methods including **GET** (by @SCullman)
