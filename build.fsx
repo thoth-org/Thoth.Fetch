@@ -37,7 +37,7 @@ let projectFile = "./src/Thoth.Fetch.fsproj"
 let testsFile = "./tests/Tests.fsproj"
 
 let gitOwner = "thoth-org"
-let repoName = "Thoth.Json"
+let repoName = "Thoth.Fetch"
 
 module Util =
 
