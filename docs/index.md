@@ -179,7 +179,7 @@ Here is two ways to do it, more exists but thuse are the simpler:
 let getBookById (id : int) : JS.Promise<Book> =
     promise {
         let url = sprintf "http://localhost:8080/books/%i" id
-        return! Fetch.get(url, isCamelCase = true)
+        return! Fetch.get(url, caseStrategy = CamelCase)
     }
 
 let createBook (book : Book) : JS.Promise<Book> =
@@ -191,7 +191,7 @@ let createBook (book : Book) : JS.Promise<Book> =
                createdAt = book.CreatedAt
                updatedAt = book.UpdatedAt |}
 
-        return! Fetch.post(url, data, isCamelCase = true)
+        return! Fetch.post(url, data, caseStrategy = CamelCase)
     }
 ```
 
@@ -200,7 +200,7 @@ let createBook (book : Book) : JS.Promise<Book> =
 let getBookById (id : int) =
     promise {
         let url = sprintf "http://localhost:8080/books/%i" id
-        return! Fetch.get<Book>(url, isCamelCase = true)
+        return! Fetch.get<_, Book>(url, caseStrategy = CamelCase)
     }
 
 let createBook (book : Book) =
@@ -212,7 +212,7 @@ let createBook (book : Book) =
                createdAt = book.CreatedAt
                updatedAt = book.UpdatedAt |}
 
-        return! Fetch.post<_, Book>(url, data, isCamelCase = true)
+        return! Fetch.post<_, Book>(url, data, caseStrategy = CamelCase)
     }
 ```
 
@@ -240,7 +240,7 @@ type Book =
 let getBookById (id : int) : JS.Promise<Book> =
     promise {
         let url = sprintf "http://localhost:8080/books/%i" id
-        return! Fetch.get(url, isCamelCase = true)
+        return! Fetch.get(url, caseStrategy = CamelCase)
     }
 ```
 
@@ -256,7 +256,7 @@ let createBook (book : Book) : JS.Promise<Book> =
                createdAt = book.CreatedAt
                updatedAt = book.UpdatedAt |}
 
-        return! Fetch.post(url, data, isCamelCase = true)
+        return! Fetch.post(url, data, caseStrategy = CamelCase)
     }
 ```
 
@@ -273,7 +273,7 @@ let updateBook (book : Book) : JS.Promise<Book> =
                createdAt = book.CreatedAt
                updatedAt = book.UpdatedAt |}
 
-        return! Fetch.put(url, data, isCamelCase = true)
+        return! Fetch.put(url, data, caseStrategy = CamelCase)
     }
 ```
 
@@ -289,4 +289,4 @@ let deleteBook (book : Book) : JS.Promise<unit> =
 
 ### Keep control over Thoth.Json
 
-When using auto coders, you can pass `isCamelCase` and/or `extra` arguments in order to control `Thoth.Json` behaviour. You can learn more about them by reading `Thoth.Json` [documentation](https://mangelmaxime.github.io/Thoth/json/v3.html).
+When using auto coders, you can pass `caseStrategy` and/or `extra` arguments in order to control `Thoth.Json` behaviour. You can learn more about them by reading `Thoth.Json` [documentation](https://mangelmaxime.github.io/Thoth/json/v3.html).
