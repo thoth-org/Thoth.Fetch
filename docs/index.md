@@ -182,6 +182,12 @@ let getBookById (id : int) : JS.Promise<Book> =
         return! Fetch.get(url, isCamelCase = true)
     }
 
+let getBookById (id : int)  = 
+    promise {
+        let url = sprintf "http://localhost:8080/books/%i" id
+        return! Fetch.get<_, Book>(url, caseStrategy = CamelCase)
+    }
+
 let createBook (book : Book) : JS.Promise<Book> =
     promise {
         let url = "http://localhost:8080/books/"
