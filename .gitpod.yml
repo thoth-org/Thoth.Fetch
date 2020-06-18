@@ -1,0 +1,33 @@
+image:
+  file: .docker/Dockerfile
+
+tasks:
+  - before: dotnet restore
+  - init: npm install && npm run build compiler
+
+github:
+  prebuilds:
+    # enable for the master/default branch (defaults to true)
+    master: true
+    # enable for all branches in this repo (defaults to false)
+    branches: false
+    # enable for pull requests coming from this repo (defaults to true)
+    pullRequests: true
+    # enable for pull requests coming from forks (defaults to false)
+    pullRequestsFromForks: true
+    # add a check to pull requests (defaults to true)
+    addCheck: true
+    # add a "Review in Gitpod" button as a comment to pull requests (defaults to false)
+    addComment: true
+    # add a "Review in Gitpod" button to the pull request's description (defaults to false)
+    addBadge: false
+    # add a label once the prebuild is ready to pull requests (defaults to false)
+    addLabel: true
+
+vscode:
+  extensions:
+    - wayou.vscode-todo-highlight@1.0.4:8IqxuxCVol2WnScJc5xVzg==
+    - PKief.material-icon-theme@3.9.2:xeHlNzPEF04yFqz/xKCD5w==
+    - Ionide.Ionide-fsharp@4.14.0:b6pHIF106zUXoIEvjMA7Vw==
+    - christian-kohler.path-intellisense@2.2.1:fMWBG5pfnZrunkTMwUwEDg==
+    - PKief.material-icon-theme@4.1.0:vCkSX95B83uVXe7Ecpyuhw==
