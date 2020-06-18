@@ -10,6 +10,6 @@ USER gitpod
 # 3. Choose "Binaries" x64
 # 4. In the new tab close the popup window
 # 5. Copy the "Direct link" shown on the page and replace the URL in this file
-RUN mkdir -p /home/gitpod/dotnet && curl -fsSL https://download.visualstudio.microsoft.com/download/pr/0c795076-b679-457e-8267-f9dd20a8ca28/02446ea777b6f5a5478cd3244d8ed65b/dotnet-sdk-3.1.300-linux-x64.tar.gz | tar xz -C /home/gitpod/dotnet
+RUN mkdir -p /home/gitpod/dotnet && curl -fsSL https://download.visualstudio.microsoft.com/download/pr/8db2b522-7fa2-4903-97ec-d6d04d297a01/f467006b9098c2de256e40d2e2f36fea/dotnet-sdk-3.1.301-linux-x64.tar.gz | tar xz -C /home/gitpod/dotnet
 ENV DOTNET_ROOT=/home/gitpod/dotnet
 ENV PATH=$PATH:/home/gitpod/dotnet
