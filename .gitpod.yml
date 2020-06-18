@@ -1,10 +1,6 @@
 image:
   file: .docker/Dockerfile
 
-tasks:
-  - before: ./fake.sh build -t DotnetRestore
-  - init: ./fake.sh build -t MochaTest
-
 github:
   prebuilds:
     # enable for the master/default branch (defaults to true)
