@@ -12,7 +12,7 @@
         "json-server": "^0.15.1",
         "mocha": "^6.2.0",
         "nacara": "^0.2.1",
-        "node-fetch": "^2.6.0"
+        "node-fetch": "^2.6.1"
     },
     "dependencies": {}
 }
