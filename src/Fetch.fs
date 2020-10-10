@@ -43,6 +43,12 @@ module Helper =
             |> fun body -> body :: properties)
         |> Option.defaultValue properties
 
+    let withFormData (data: Browser.Types.FormData) properties =
+        data
+        |> (!^)
+        |> Body
+        |> fun body -> body :: properties
+
     let withProperties custom properties =
         custom
         |> Option.map ((@) properties)
@@ -527,3 +533,281 @@ type Fetch =
             (url, httpMethod = HttpMethod.DELETE, ?data = data, ?properties = properties, ?headers = headers,
              ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
              ?dataResolver = dataResolver)
+
+    /// **Description**
+    ///
+    /// Send a multi-part file form request to the specified file resource without encoding it and decodes the response.
+    ///
+    /// If fetch and decoding succeed, we return `Ok 'Response`.
+    ///
+    /// If we fail, we return `Error (FetchError)` containing an better explanation.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
+    ///   * `httpMethod` - optional parameter of type `HttpMethod` - HttpMethod used for Request, defaults to **POST**
+    ///   * `formData` - optional parameter of type `'Browser.Types.FormData` - Data sent via the body
+    ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
+    ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch's properties
+    ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
+    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<Result<'Response,FetchError>>`
+    ///
+    /// **Exceptions**
+    ///
+    static member tryFetchAs<'Response> (formData: Browser.Types.FormData, url: string, ?decoder: Decoder<'Response>,
+                                         ?httpMethod: HttpMethod, ?properties: RequestProperties list,
+                                         ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy,
+                                         ?extra: ExtraCoders,
+                                         [<Inject>] ?responseResolver: ITypeResolver<'Response>) =
+        try
+            let properties =
+                [ Method <| defaultArg httpMethod HttpMethod.POST
+                  requestHeaders (defaultArg headers []) ]
+                |> withFormData formData
+                |> withProperties properties
+
+            promise {
+                let! response = fetch url properties
+                return! resolve response caseStrategy extra decoder responseResolver
+            }
+            |> Promise.catch (NetworkError >> Error)
+
+        with exn -> promise { return PreparingRequestFailed exn |> Error }
+
+    /// **Description**
+    ///
+    /// Send a multi-part file form request to the specified file resource without encoding it and decodes the response.
+    ///
+    /// This method set the `ContentType` header to `"application/octet-stream"`.
+    ///
+    //// An exception will be thrown if fetch fails.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
+    ///   * `httpMethod` - optional parameter of type `HttpMethod` - HttpMethod used, defaults to **POST**
+    ///   * `formData` - optional parameter of type `'Browser.Types.FormData` - Data sent via the body
+    ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
+    ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch's properties
+    ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
+    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<'Response>`
+    ///
+    /// **Exceptions**
+    ///   * `System.Exception` - Contains information explaining why the request failed
+    ///
+    static member fetchAs<'Response> (formData: Browser.Types.FormData, url: string, ?decoder: Decoder<'Response>,
+                                      ?httpMethod: HttpMethod, ?properties: RequestProperties list,
+                                      ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy, ?extra: ExtraCoders,
+                                      [<Inject>] ?responseResolver: ITypeResolver<'Response>) =
+        promise {
+            let! result = Fetch.tryFetchAs<'Response>
+                              (formData, url, ?decoder = decoder, ?httpMethod = httpMethod, ?properties = properties,
+                               ?headers = headers, ?caseStrategy = caseStrategy, ?extra = extra,
+                               ?responseResolver = responseResolver)
+            let response =
+                match result with
+                | Ok response -> response
+                | Error error -> failwith (message error)
+            return response
+        }
+
+    /// **Description**
+    ///
+    /// Send a **POST** request to the specified file resource without encoding it and decodes the response.
+    ///
+    /// This method set the `ContentType` header to `"application/octet-stream"` if data is provided.
+    ///
+    //// An exception will be thrown if the request fails.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `formData` - optional parameter of type `'Browser.Types.FormData` - Data sent via the body
+    ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
+    ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch's properties
+    ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
+    ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
+    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<'Response>`
+    ///
+    /// **Exceptions**
+    ///   * `System.Exception` - Contains information explaining why the request failed
+    ///
+    static member post<'Response> (formData: Browser.Types.FormData, url: string, ?properties: RequestProperties list,
+                                   ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy,
+                                   ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
+                                   [<Inject>] ?responseResolver: ITypeResolver<'Response>) =
+        Fetch.fetchAs
+            (formData, url, httpMethod = HttpMethod.POST, ?properties = properties, ?headers = headers,
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver)
+
+    /// **Description**
+    ///
+    /// Send a **POST** request to the specified file resource without encoding it and decodes the response.
+    ///
+    /// This method set the `ContentType` header to `"application/octet-stream"` if data is provided.
+    ///
+    //// If we failed, we return `Error (FetchError)` containing an better explanation.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `formData` - optional parameter of type `'Browser.Types.FormData` - Data sent via the body
+    ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
+    ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch's properties
+    ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
+    ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
+    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<Result<'Response,FetchError>>`
+    ///
+    /// **Exceptions**
+    ///
+    static member tryPost<'Response> (formData: Browser.Types.FormData, url: string, ?properties: RequestProperties list,
+                                      ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy, ?extra: ExtraCoders,
+                                      ?decoder: Decoder<'Response>,
+                                      [<Inject>] ?responseResolver: ITypeResolver<'Response>) =
+        Fetch.tryFetchAs
+            (formData, url, httpMethod = HttpMethod.POST, ?properties = properties, ?headers = headers,
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver)
+
+    /// **Description**
+    ///
+    /// Send a **PUT** request to the specified file resource without encoding it and decodes the response.
+    ///
+    /// This method set the `ContentType` header to `"application/octet-stream"`.
+    ///
+    //// An exception will be thrown if the request fails.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `formData` - optional parameter of type `'Browser.Types.FormData` - Data sent via the body
+    ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
+    ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch's properties
+    ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
+    ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
+    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<'Response>`
+    ///
+    /// **Exceptions**
+    ///   * `System.Exception` - Contains information explaining why the request failed
+    ///
+    static member put<'Response> (formData: Browser.Types.FormData, url: string, ?properties: RequestProperties list,
+                                  ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy,
+                                  ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
+                                  [<Inject>] ?responseResolver: ITypeResolver<'Response>) =
+        Fetch.fetchAs
+            (formData, url, httpMethod = HttpMethod.PUT, ?properties = properties, ?headers = headers,
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver)
+
+    /// **Description**
+    ///
+    /// Send a **PUT** request to the specified file resource without encoding it and decodes the response.
+    ///
+    /// This method set the `ContentType` header to `"application/octet-stream"`.
+    ///
+    //// If we failed, we return `Error (FetchError)` containing an better explanation.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `formData` - optional parameter of type `'Browser.Types.FormData` - Data sent via the body
+    ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
+    ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch's properties
+    ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
+    ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
+    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<Result<'Response,FetchError>>`
+    ///
+    /// **Exceptions**
+    ///
+    static member tryPut<'Response> (formData: Browser.Types.FormData, url: string, ?properties: RequestProperties list,
+                                     ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy, ?extra: ExtraCoders,
+                                     ?decoder: Decoder<'Response>,
+                                     [<Inject>] ?responseResolver: ITypeResolver<'Response>) =
+        Fetch.tryFetchAs
+            (formData, url, httpMethod = HttpMethod.PUT, ?properties = properties, ?headers = headers,
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver)
+
+    /// **Description**
+    ///
+    /// Send a **PATCH** request to the specified file resource without encoding it and decodes the response.
+    ///
+    /// This method set the `ContentType` header to `"application/octet-stream"`.
+    ///
+    //// An exception will be thrown if the request fails.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `formData` - optional parameter of type `'Browser.Types.FormData` - Data sent via the body
+    ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
+    ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch's properties
+    ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
+    ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
+    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<'Response>`
+    ///
+    /// **Exceptions**
+    ///   * `System.Exception` - Contains information explaining why the request failed
+    ///
+    static member patch<'Response> (formData: Browser.Types.FormData, url: string, ?properties: RequestProperties list,
+                                    ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy,
+                                    ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
+                                    [<Inject>] ?responseResolver: ITypeResolver<'Response>) =
+        Fetch.fetchAs
+            (formData, url, httpMethod = HttpMethod.PATCH, ?properties = properties, ?headers = headers,
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver)
+
+    /// **Description**
+    ///
+    /// Send a **PATCH** request to the specified file resource without encoding it and decodes the response.
+    ///
+    /// This method set the `ContentType` header to `"application/octet-stream"`.
+    ///
+    //// If we failed, we return `Error (FetchError)` containing an better explanation.
+    ///
+    /// **Parameters**
+    ///   * `url` - parameter of type `string` - URL to request
+    ///   * `formData` - optional parameter of type `'Browser.Types.FormData` - Data sent via the body
+    ///   * `properties` - optional parameter of type `RequestProperties list` - Parameters passed to fetch
+    ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch's properties
+    ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
+    ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
+    ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
+    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
+    ///
+    /// **Output Type**
+    ///   * `JS.Promise<Result<'Response,FetchError>>`
+    ///
+    /// **Exceptions**
+    ///
+    static member tryPatch<'Response> (formData: Browser.Types.FormData, url: string, ?properties: RequestProperties list,
+                                       ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy, ?extra: ExtraCoders,
+                                       ?decoder: Decoder<'Response>,
+                                       [<Inject>] ?responseResolver: ITypeResolver<'Response>) =
+        Fetch.tryFetchAs
+            (formData, url, httpMethod = HttpMethod.PATCH, ?properties = properties, ?headers = headers,
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver)
+
+
+
+
