@@ -1547,7 +1547,7 @@ Error at: `$`
 Expecting an object with a field named `author` but instead got:
 {
     "id": 1,
-    "name": "Brandon Sanderson"
+    "name": "hello-world"
 }
                         """.Trim()
                     ))
@@ -1564,7 +1564,7 @@ Expecting an object with a field named `author` but instead got:
                 let formData = Browser.Blob.FormData.Create()
                 formData.append("testField", file, "test.txt")
 
-                let! res = Fetch.tryFetchAs<Book>(formData, "http://localhost:3000/patch/book", caseStrategy = CamelCase)
+                let! res = Fetch.tryPatch<Book>(formData, "http://localhost:3000/patch/author", caseStrategy = CamelCase)
 
                 let expected =
                     Error(
@@ -1583,7 +1583,7 @@ Expecting a datetime but instead got: undefined
 
         it "Fetch.tryPatchAsFormData works with unit response" <| fun d ->
             promise {
-                let! res = Fetch.tryFetchAs<unit>(null :> Browser.Types.FormData, "http://localhost:3000/patch/unit")
+                let! res = Fetch.tryPatch<unit>(null :> Browser.Types.FormData, "http://localhost:3000/patch/unit")
                 let expected = Ok ()
                 Assert.AreEqual(res, expected)
                 d()
@@ -1667,7 +1667,7 @@ Error at: `$`
 Expecting an object with a field named `author` but instead got:
 {
     "id": 1,
-    "name": "Brandon Sanderson"
+    "name": "hello-world"
 }
                     """.Trim()
                 Assert.AreEqual(error.Message, expected)
