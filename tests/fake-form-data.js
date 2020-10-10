@@ -36,7 +36,7 @@ function utf8_decode(bytes) {
 
 export default (date) => (req, res) => {
     const title = utf8_decode(req.files[0].buffer);
-    if (req.path === "/patch/book") {
+    if (req.path === "/fake-form-data/book") {
         res.jsonp({
             "id": 1,
             "title": title,
@@ -44,7 +44,7 @@ export default (date) => (req, res) => {
             "createdAt": date.toISOString(),
             "updatedAt": null
         });
-    } else if (req.path === "/patch/author") {
+    } else if (req.path === "/fake-form-data/author") {
         res.jsonp({
             "id": 1,
             "name": title
