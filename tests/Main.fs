@@ -102,16 +102,24 @@ let initialDatabase =
 [<Import("*", "json-server")>]
 let jsonServer : obj = jsNative
 
+[<Import("default", "multer")>]
+let multer : (obj -> obj) = jsNative
+
 [<Import("default", "./fake-delete.js")>]
 let fakeDeleteHandler : obj = jsNative
 
 [<Import("default", "./fake-unit.js")>]
 let fakeUnitHandler : obj = jsNative
 
+[<Import("default", "./fake-form-data.js")>]
+let fakeFormDataHandler : (obj -> obj) = jsNative
+
 [<Import("default", "./fake-error-report.js")>]
 let fakeErrorReportHandler : obj = jsNative
 
 Node.Api.``global``?fetch <- import "*" "node-fetch"
+Node.Api.``global``?Blob <- importDefault "fetch-blob"
+Node.Api.``global``?FormData <- importDefault "form-data"
 
 describe "Thoth.Fetch" <| fun _ ->
 
@@ -136,6 +144,8 @@ describe "Thoth.Fetch" <| fun _ ->
                 "logger" ==> false
             ]
 
+        let upload = multer(createObj [ "storage" ==> multer?memoryStorage() ])
+
         server?``use``(jsonServer?defaults(defaultOptions))
         server?delete("/fake-delete", fakeDeleteHandler)
         server?``get``("/get/unit", fakeUnitHandler)
@@ -143,6 +153,8 @@ describe "Thoth.Fetch" <| fun _ ->
         server?delete("/delete/unit", fakeUnitHandler)
         server?put("/put/unit", fakeUnitHandler)
         server?patch("/patch/unit", fakeUnitHandler)
+        server?patch("/patch/book", upload?any(), fakeFormDataHandler(databaseCreationDate))
+        server?patch("/patch/author", upload?any(), fakeFormDataHandler(databaseCreationDate))
         server?``get``("/get/fake-error-report", fakeErrorReportHandler)
         server?``use``(jsonServer?router(dbFile))
         serverInstance <- server?listen(3000, !!ignore)
@@ -151,6 +163,8 @@ describe "Thoth.Fetch" <| fun _ ->
         serverInstance?close()
 
     // End of the set up
+
+
 
     describe "Fetch.fetchAs" <| fun _ ->
 
@@ -423,6 +437,8 @@ Expecting a datetime but instead got: undefined
             |> Promise.catch d
             |> Promise.start
 
+
+
     describe "Fetch.get" <| fun _ ->
         it "Fetch.get works with manual decoder" <| fun d ->
             promise {
@@ -617,6 +633,8 @@ Expecting a datetime but instead got: undefined
                 d()
             } |> Promise.catch d
             |> Promise.start
+
+
 
     describe "Fetch.post" <| fun _ ->
         it "Fetch.post works with manual coder" <| fun d ->
@@ -1078,6 +1096,8 @@ Expecting a datetime but instead got: undefined
             } |> Promise.catch d
             |> Promise.start
 
+
+
     describe "Fetch.patch" <| fun _ ->
         it "Fetch.patch works with manual coder" <| fun d ->
             promise {
@@ -1282,6 +1302,8 @@ Expecting a datetime but instead got: undefined
             } |> Promise.catch d
             |> Promise.start
 
+
+
     describe "Fetch.delete" <| fun _ ->
 
         it "Fetch.detele can be just simple" <| fun d ->
@@ -1437,6 +1459,248 @@ Expecting a datetime but instead got: undefined
                 d()
             } |> Promise.catch d
             |> Promise.start
+
+
+
+    describe "Fetch.tryPatchAsFormData" <| fun _ ->
+        it "Fetch.tryPatchAsFormData works with manual coder" <| fun d ->
+            promise {
+                let! originalBook = Fetch.fetchAs("http://localhost:3000/books/1", caseStrategy = CamelCase)
+                let updatedBook =
+                    { originalBook with Title = "hello-world" }
+
+                let bytes = Fable.Core.JS.Constructors.Uint8Array.Create ( System.Text.Encoding.UTF8.GetBytes("hello-world") )
+                let file = Browser.Blob.Blob.Create([| bytes |])
+                let formData = Browser.Blob.FormData.Create()
+                formData.append("testField", file, "test.txt")
+
+                let! res = Fetch.tryPatch(formData, "http://localhost:3000/patch/book", decoder = Book.Decoder)
+                let expected = Ok updatedBook
+
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.tryPatchAsFormData works with extra coder" <| fun d ->
+            promise {
+                let! originalBook = Fetch.fetchAs("http://localhost:3000/books/1", caseStrategy = CamelCase)
+                let updatedBook =
+                    { originalBook with Title = "hello-world" }
+
+                let bytes = Fable.Core.JS.Constructors.Uint8Array.Create ( System.Text.Encoding.UTF8.GetBytes("hello-world") )
+                let file = Browser.Blob.Blob.Create([| bytes |])
+                let formData = Browser.Blob.FormData.Create()
+                formData.append("testField", file, "test.txt")
+
+                let! res = Fetch.tryPatch(formData, "http://localhost:3000/patch/book", extra = bookCoder)
+                let expected = Ok updatedBook
+
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.tryPatchAsFormData works with auto coder" <| fun d ->
+            promise {
+                let! originalBook = Fetch.fetchAs("http://localhost:3000/books/1", caseStrategy = CamelCase)
+                let updatedBook =
+                    { originalBook with Title = "hello-world" }
+
+                let bytes = Fable.Core.JS.Constructors.Uint8Array.Create ( System.Text.Encoding.UTF8.GetBytes("hello-world") )
+                let file = Browser.Blob.Blob.Create([| bytes |])
+                let formData = Browser.Blob.FormData.Create()
+                formData.append("testField", file, "test.txt")
+
+                let! res = Fetch.tryPatch(formData, "http://localhost:3000/patch/book", caseStrategy = CamelCase)
+                let expected = Ok updatedBook
+
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.tryPatchAsFormData throw an exception explaining why the extra coder failed" <| fun d ->
+            promise {
+                let bytes = Fable.Core.JS.Constructors.Uint8Array.Create ( System.Text.Encoding.UTF8.GetBytes("hello-world") )
+                let file = Browser.Blob.Blob.Create([| bytes |])
+                let formData = Browser.Blob.FormData.Create()
+                formData.append("testField", file, "test.txt")
+
+                let! res = Fetch.tryPatch<Author>(formData, "http://localhost:3000/patch/author", extra = brokenAuthorCoder, caseStrategy = CamelCase)
+                let expected =
+                    Error(
+                        DecodingFailed(
+                            """
+Error at: `$`
+Expecting an object with a field named `author` but instead got:
+{
+    "id": 1,
+    "name": "Brandon Sanderson"
+}
+                        """.Trim()
+                    ))
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.tryPatchAsFormData throw an exception explaining why the auto decoder failed" <| fun d ->
+            promise {
+                let bytes = Fable.Core.JS.Constructors.Uint8Array.Create ( System.Text.Encoding.UTF8.GetBytes("hello-world") )
+                let file = Browser.Blob.Blob.Create([| bytes |])
+                let formData = Browser.Blob.FormData.Create()
+                formData.append("testField", file, "test.txt")
+
+                let! res = Fetch.tryFetchAs<Book>(formData, "http://localhost:3000/patch/book", caseStrategy = CamelCase)
+
+                let expected =
+                    Error(
+                        DecodingFailed(
+                            """
+Error at: `$.createdAt`
+Expecting a datetime but instead got: undefined
+                        """.Trim()
+                    ))
+
+                Assert.AreEqual(res, expected)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.tryPatchAsFormData works with unit response" <| fun d ->
+            promise {
+                let! res = Fetch.tryFetchAs<unit>(null :> Browser.Types.FormData, "http://localhost:3000/patch/unit")
+                let expected = Ok ()
+                Assert.AreEqual(res, expected)
+                d()
+            } |> Promise.catch d
+            |> Promise.start
+
+    describe "Fetch.patchAsFormData" <| fun _ ->
+        it "Fetch.patchAsFormData works with manual coder" <| fun d ->
+            promise {
+                let! originalBook = Fetch.fetchAs("http://localhost:3000/books/1", caseStrategy = CamelCase)
+                let updatedBook =
+                    { originalBook with Title = "hello-world" }
+
+                let bytes = Fable.Core.JS.Constructors.Uint8Array.Create ( System.Text.Encoding.UTF8.GetBytes("hello-world") )
+                let file = Browser.Blob.Blob.Create([| bytes |])
+                let formData = Browser.Blob.FormData.Create()
+                formData.append("testField", file, "test.txt")
+
+                let! res = Fetch.patch(formData, "http://localhost:3000/patch/book", decoder = Book.Decoder)
+
+                Assert.AreEqual(res, updatedBook)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.patchAsFormData works with extra coder" <| fun d ->
+            promise {
+                let! originalBook = Fetch.fetchAs("http://localhost:3000/books/1", caseStrategy = CamelCase)
+                let updatedBook =
+                    { originalBook with Title = "hello-world" }
+
+                let bytes = Fable.Core.JS.Constructors.Uint8Array.Create ( System.Text.Encoding.UTF8.GetBytes("hello-world") )
+                let file = Browser.Blob.Blob.Create([| bytes |])
+                let formData = Browser.Blob.FormData.Create()
+                formData.append("testField", file, "test.txt")
+
+                let! res = Fetch.patch(formData, "http://localhost:3000/patch/book",  extra = bookCoder)
+
+                Assert.AreEqual(res, updatedBook)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.patchAsFormData works with auto coder" <| fun d ->
+            promise {
+                let! originalBook = Fetch.fetchAs("http://localhost:3000/books/1", caseStrategy = CamelCase)
+                let updatedBook =
+                    { originalBook with Title = "hello-world" }
+
+                let bytes = Fable.Core.JS.Constructors.Uint8Array.Create ( System.Text.Encoding.UTF8.GetBytes("hello-world") )
+                let file = Browser.Blob.Blob.Create([| bytes |])
+                let formData = Browser.Blob.FormData.Create()
+                formData.append("testField", file, "test.txt")
+
+                let! res = Fetch.patch(formData, "http://localhost:3000/patch/book", caseStrategy = CamelCase)
+
+                Assert.AreEqual(res, updatedBook)
+                d()
+            }
+            |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.patchAsFormData throw an exception explaining why the extra coder failed" <| fun d ->
+            promise {
+                let bytes = Fable.Core.JS.Constructors.Uint8Array.Create ( System.Text.Encoding.UTF8.GetBytes("hello-world") )
+                let file = Browser.Blob.Blob.Create([| bytes |])
+                let formData = Browser.Blob.FormData.Create()
+                formData.append("testField", file, "test.txt")
+
+                let! _ = Fetch.patch<Author>(formData, "http://localhost:3000/patch/author", extra = brokenAuthorCoder, caseStrategy = CamelCase)
+                d()
+            }
+            |> Promise.catch (fun error ->
+                let expected =
+                    """
+[Thoth.Fetch] Error while decoding the response:
+
+Error at: `$`
+Expecting an object with a field named `author` but instead got:
+{
+    "id": 1,
+    "name": "Brandon Sanderson"
+}
+                    """.Trim()
+                Assert.AreEqual(error.Message, expected)
+                d()
+            )
+            |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.patchAsFormData throw an exception explaining why the auto decoder failed" <| fun d ->
+            promise {
+                let bytes = Fable.Core.JS.Constructors.Uint8Array.Create ( System.Text.Encoding.UTF8.GetBytes("hello-world") )
+                let file = Browser.Blob.Blob.Create([| bytes |])
+                let formData = Browser.Blob.FormData.Create()
+                formData.append("testField", file, "test.txt")
+
+                let! _ = Fetch.patch<Book>(formData, "http://localhost:3000/patch/book", caseStrategy = CamelCase)
+                d()
+            }
+            |> Promise.catch (fun error ->
+                let expected =
+                    """
+[Thoth.Fetch] Error while decoding the response:
+
+Error at: `$.createdAt`
+Expecting a datetime but instead got: undefined
+                    """.Trim()
+                Assert.AreEqual(error.Message, expected)
+                d()
+            )
+            |> Promise.catch d
+            |> Promise.start
+
+        it "Fetch.patchAsFormData works with unit response" <| fun d ->
+            promise {
+                let! res = Fetch.patch<unit>(null :> Browser.Types.FormData, "http://localhost:3000/patch/unit")
+                Assert.AreEqual(res, ())
+                d()
+            } |> Promise.catch d
+            |> Promise.start
+
+
 
     describe "Errors" <| fun _ ->
         it "A 404 should be reported as Bad Status" <| fun d ->
