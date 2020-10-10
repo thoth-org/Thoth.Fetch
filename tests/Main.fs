@@ -121,6 +121,14 @@ Node.Api.``global``?fetch <- import "*" "node-fetch"
 Node.Api.``global``?Blob <- importDefault "fetch-blob"
 Node.Api.``global``?FormData <- importDefault "form-data"
 
+//FIXME: this looks like a bug in formdata-node or node-blob
+//       we need to update node-fetch to version-3
+//       ref: https://github.com/form-data/form-data/issues/220
+//       ref: https://github.com/form-data/form-data/issues/359
+[<Import("default", "./_bugfix_.js")>]
+let monkeyPatch : (obj -> unit) = jsNative
+monkeyPatch()
+
 describe "Thoth.Fetch" <| fun _ ->
 
     // Set up the json-server instance
