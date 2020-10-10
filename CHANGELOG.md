@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 
+* Added overloads for `Browser.Types.FormData` to make it easier to upload files.
+
+## 2.0.0 - 2020-03-04
+
+### Changed
+
+* Update to Thoth.Json v4
+* Release 2.0.0
+
 ## 2.0.0-beta-002 - 2019-11-26
 ### Fixed
 * Fix #13: Only consume body when http code doesn't cause immediate rejection (by @WalternativE)
