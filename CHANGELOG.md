@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 
+* Added overloads for `Browser.Types.FormData` to make it easier to upload files.
+
 ## 2.0.0 - 2020-03-04
 
 ### Changed
