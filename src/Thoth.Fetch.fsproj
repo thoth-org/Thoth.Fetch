@@ -7,7 +7,7 @@
     <RepositoryUrl>https://github.com/thoth-org/Thoth.Fetch</RepositoryUrl>
     <PackageTags>fable;fsharp;fetch</PackageTags>
     <Authors>Maxime Mangel</Authors>
-    <Version>2.0.0</Version>
+    <Version>3.0.0</Version>
   </PropertyGroup>
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
