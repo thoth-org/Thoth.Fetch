@@ -26,18 +26,17 @@ module Helper =
         | Some _ -> ContentType "application/json" :: headers
         | _ -> headers
 
-    let encode data caseStrategy extra dataResolver =
-        let encoder =
-            Encode.Auto.generateEncoderCached (?caseStrategy = caseStrategy, ?extra = extra, ?resolver = dataResolver)
+    let inline encode data caseStrategy extra =
+        let encoder = Encode.Auto.generateEncoderCached (?caseStrategy = caseStrategy, ?extra = extra)
 
         data
         |> encoder
         |> Encode.toString 0
 
-    let withBody data caseStrategy extra dataResolver properties =
+    let inline withBody data caseStrategy extra properties =
         data
         |> Option.map (fun data ->
-            encode data caseStrategy extra dataResolver
+            encode data caseStrategy extra
             |> (!^)
             |> Body
             |> fun body -> body :: properties)
@@ -48,32 +47,28 @@ module Helper =
         |> Option.map ((@) properties)
         |> Option.defaultValue properties
 
-    let eitherUnit (responseResolver: ITypeResolver<'Response>) cont =
-        if responseResolver.ResolveType().FullName = typedefof<unit>.FullName then Ok(unbox())
-        else cont()
-
-    let resolve (response: Response) caseStrategy extra (decoder: Decoder<'Response> option)
-        (responseResolver: ITypeResolver<'Response> option) =
+    let inline resolve (response: Response) caseStrategy extra (decoder: Decoder<'Response> option) =
 
         let decoder =
             decoder
             |> Option.defaultValue
                 (Decode.Auto.generateDecoderCached
-                    (?caseStrategy = caseStrategy, ?extra = extra, ?resolver = responseResolver))
+                    (?caseStrategy = caseStrategy, ?extra = extra))
 
         let decode body = Decode.fromString decoder body
-
-        let eitherUnitOr = eitherUnit responseResolver.Value
 
         promise {
             let! result =
                 if response.Ok then
                     promise {
                         let! body = response.text()
-                        return eitherUnitOr <| fun () ->
-                            match decode body with
-                            | Ok value -> Ok value
-                            | Error msg -> DecodingFailed msg |> Error
+                        return
+                            if typeof<'Response> = typeof<unit>
+                            then Ok(unbox ())
+                            else
+                                match decode body with
+                                | Ok value -> Ok value
+                                | Error msg -> DecodingFailed msg |> Error
                     }
                 else
                     FetchFailed response |> Error
@@ -113,30 +108,26 @@ type Fetch =
     ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch's properties
     ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
-    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
-    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     ///
     /// **Output Type**
     ///   * `JS.Promise<Result<'Response,FetchError>>`
     ///
     /// **Exceptions**
     ///
-    static member tryFetchAs<'Data, 'Response> (url: string, ?decoder: Decoder<'Response>, ?data: 'Data,
+    static member inline tryFetchAs<'Data, 'Response> (url: string, ?decoder: Decoder<'Response>, ?data: 'Data,
                                                 ?httpMethod: HttpMethod, ?properties: RequestProperties list,
                                                 ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy,
-                                                ?extra: ExtraCoders,
-                                                [<Inject>] ?responseResolver: ITypeResolver<'Response>,
-                                                [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
+                                                ?extra: ExtraCoders) =
         try
             let properties =
                 [ Method <| defaultArg httpMethod HttpMethod.GET
                   requestHeaders (defaultArg headers [] |> withContentTypeJson data) ]
-                |> withBody data caseStrategy extra dataResolver
+                |> withBody data caseStrategy extra
                 |> withProperties properties
 
             promise {
                 let! response = fetch url properties
-                return! resolve response caseStrategy extra decoder responseResolver
+                return! resolve response caseStrategy extra decoder
             }
             |> Promise.catch (NetworkError >> Error)
 
@@ -159,8 +150,6 @@ type Fetch =
     ///   * `headers` - optional parameter of type `HttpRequestHeaders list` - Parameters passed to fetch's properties
     ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
-    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
-    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     ///
     /// **Output Type**
     ///   * `JS.Promise<'Response>`
@@ -168,16 +157,13 @@ type Fetch =
     /// **Exceptions**
     ///   * `System.Exception` - Contains information explaining why the request failed
     ///
-    static member fetchAs<'Data, 'Response> (url: string, ?decoder: Decoder<'Response>, ?data: 'Data,
+    static member inline fetchAs<'Data, 'Response> (url: string, ?decoder: Decoder<'Response>, ?data: 'Data,
                                              ?httpMethod: HttpMethod, ?properties: RequestProperties list,
-                                             ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy, ?extra: ExtraCoders,
-                                             [<Inject>] ?responseResolver: ITypeResolver<'Response>,
-                                             [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
+                                             ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy, ?extra: ExtraCoders) =
         promise {
             let! result = Fetch.tryFetchAs<'Data, 'Response>
                               (url, ?decoder = decoder, ?httpMethod = httpMethod, ?data = data, ?properties = properties,
-                               ?headers = headers, ?caseStrategy = caseStrategy, ?extra = extra,
-                               ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+                               ?headers = headers, ?caseStrategy = caseStrategy, ?extra = extra)
             let response =
                 match result with
                 | Ok response -> response
@@ -201,8 +187,6 @@ type Fetch =
     ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
     ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
-    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
-    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     ///
     /// **Output Type**
     ///   * `JS.Promise<'Response>`
@@ -210,14 +194,12 @@ type Fetch =
     /// **Exceptions**
     ///   * `System.Exception` - Contains information explaining why the request failed
     ///
-    static member get<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
+    static member inline get<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                          ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy,
-                                         ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
-                                         [<Inject>] ?responseResolver: ITypeResolver<'Response>,
-                                         [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
+                                         ?extra: ExtraCoders, ?decoder: Decoder<'Response>) =
         Fetch.fetchAs
-            (url, ?data = data, ?properties = properties, ?headers = headers, ?caseStrategy = caseStrategy, ?extra = extra,
-             ?decoder = decoder, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+            (url, ?data = data, ?properties = properties, ?headers = headers,
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder)
 
     /// **Description**
     ///
@@ -235,22 +217,18 @@ type Fetch =
     ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
     ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
-    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
-    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     ///
     /// **Output Type**
     ///   * `JS.Promise<Result<'Response,FetchError>>`
     ///
     /// **Exceptions**
     ///
-    static member tryGet<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
+    static member inline tryGet<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                             ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy, ?extra: ExtraCoders,
-                                            ?decoder: Decoder<'Response>,
-                                            [<Inject>] ?responseResolver: ITypeResolver<'Response>,
-                                            [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
+                                            ?decoder: Decoder<'Response>) =
         Fetch.tryFetchAs
-            (url, ?data = data, ?properties = properties, ?headers = headers, ?caseStrategy = caseStrategy, ?extra = extra,
-             ?decoder = decoder, ?responseResolver = responseResolver, ?dataResolver = dataResolver)
+            (url, ?data = data, ?properties = properties, ?headers = headers,
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder)
 
     /// **Description**
     ///
@@ -268,8 +246,6 @@ type Fetch =
     ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
     ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
-    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
-    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     ///
     /// **Output Type**
     ///   * `JS.Promise<'Response>`
@@ -277,15 +253,12 @@ type Fetch =
     /// **Exceptions**
     ///   * `System.Exception` - Contains information explaining why the request failed
     ///
-    static member post<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
+    static member inline post<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                           ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy,
-                                          ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
-                                          [<Inject>] ?responseResolver: ITypeResolver<'Response>,
-                                          [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
+                                          ?extra: ExtraCoders, ?decoder: Decoder<'Response>) =
         Fetch.fetchAs
             (url, httpMethod = HttpMethod.POST, ?data = data, ?properties = properties, ?headers = headers,
-             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
-             ?dataResolver = dataResolver)
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder)
 
     /// **Description**
     ///
@@ -303,23 +276,18 @@ type Fetch =
     ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
     ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
-    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
-    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     ///
     /// **Output Type**
     ///   * `JS.Promise<Result<'Response,FetchError>>`
     ///
     /// **Exceptions**
     ///
-    static member tryPost<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
+    static member inline tryPost<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                              ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy, ?extra: ExtraCoders,
-                                             ?decoder: Decoder<'Response>,
-                                             [<Inject>] ?responseResolver: ITypeResolver<'Response>,
-                                             [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
+                                             ?decoder: Decoder<'Response>) =
         Fetch.tryFetchAs
             (url, httpMethod = HttpMethod.POST, ?data = data, ?properties = properties, ?headers = headers,
-             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
-             ?dataResolver = dataResolver)
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder)
 
     /// **Description**
     ///
@@ -337,8 +305,6 @@ type Fetch =
     ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
     ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
-    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
-    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     ///
     /// **Output Type**
     ///   * `JS.Promise<'Response>`
@@ -346,15 +312,12 @@ type Fetch =
     /// **Exceptions**
     ///   * `System.Exception` - Contains information explaining why the request failed
     ///
-    static member put<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
+    static member inline put<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                          ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy,
-                                         ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
-                                         [<Inject>] ?responseResolver: ITypeResolver<'Response>,
-                                         [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
+                                         ?extra: ExtraCoders, ?decoder: Decoder<'Response>) =
         Fetch.fetchAs
             (url, httpMethod = HttpMethod.PUT, ?data = data, ?properties = properties, ?headers = headers,
-             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
-             ?dataResolver = dataResolver)
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder)
 
     /// **Description**
     ///
@@ -372,23 +335,18 @@ type Fetch =
     ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
     ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
-    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
-    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     ///
     /// **Output Type**
     ///   * `JS.Promise<Result<'Response,FetchError>>`
     ///
     /// **Exceptions**
     ///
-    static member tryPut<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
+    static member inline tryPut<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                             ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy, ?extra: ExtraCoders,
-                                            ?decoder: Decoder<'Response>,
-                                            [<Inject>] ?responseResolver: ITypeResolver<'Response>,
-                                            [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
+                                            ?decoder: Decoder<'Response>) =
         Fetch.tryFetchAs
             (url, httpMethod = HttpMethod.PUT, ?data = data, ?properties = properties, ?headers = headers,
-             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
-             ?dataResolver = dataResolver)
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder)
 
     /// **Description**
     ///
@@ -406,8 +364,6 @@ type Fetch =
     ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
     ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
-    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
-    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     ///
     /// **Output Type**
     ///   * `JS.Promise<'Response>`
@@ -415,15 +371,12 @@ type Fetch =
     /// **Exceptions**
     ///   * `System.Exception` - Contains information explaining why the request failed
     ///
-    static member patch<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
+    static member inline patch<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                            ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy,
-                                           ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
-                                           [<Inject>] ?responseResolver: ITypeResolver<'Response>,
-                                           [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
+                                           ?extra: ExtraCoders, ?decoder: Decoder<'Response>) =
         Fetch.fetchAs
             (url, httpMethod = HttpMethod.PATCH, ?data = data, ?properties = properties, ?headers = headers,
-             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
-             ?dataResolver = dataResolver)
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder)
 
     /// **Description**
     ///
@@ -441,23 +394,18 @@ type Fetch =
     ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
     ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
-    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
-    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     ///
     /// **Output Type**
     ///   * `JS.Promise<Result<'Response,FetchError>>`
     ///
     /// **Exceptions**
     ///
-    static member tryPatch<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
+    static member inline tryPatch<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                               ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy, ?extra: ExtraCoders,
-                                              ?decoder: Decoder<'Response>,
-                                              [<Inject>] ?responseResolver: ITypeResolver<'Response>,
-                                              [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
+                                              ?decoder: Decoder<'Response>) =
         Fetch.tryFetchAs
             (url, httpMethod = HttpMethod.PATCH, ?data = data, ?properties = properties, ?headers = headers,
-             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
-             ?dataResolver = dataResolver)
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder)
 
     /// **Description**
     ///
@@ -475,8 +423,6 @@ type Fetch =
     ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
     ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
-    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
-    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     ///
     /// **Output Type**
     ///   * `JS.Promise<'Response>`
@@ -484,15 +430,12 @@ type Fetch =
     /// **Exceptions**
     ///   * `System.Exception` - Contains information explaining why the request failed
     ///
-    static member delete<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
+    static member inline delete<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                             ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy, ?extra: ExtraCoders,
-                                            ?decoder: Decoder<'Response>,
-                                            [<Inject>] ?responseResolver: ITypeResolver<'Response>,
-                                            [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
+                                            ?decoder: Decoder<'Response>) =
         Fetch.fetchAs
             (url, httpMethod = HttpMethod.DELETE, ?data = data, ?properties = properties, ?headers = headers,
-             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
-             ?dataResolver = dataResolver)
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder)
 
     /// **Description**
     ///
@@ -510,20 +453,15 @@ type Fetch =
     ///   * `caseStrategy` - optional parameter of type `CaseStrategy` - Options passed to Thoth.Json to control JSON keys representation
     ///   * `extra` - optional parameter of type `ExtraCoders` - Options passed to Thoth.Json to extends the known coders
     ///   * `decoder` - parameter of type `Decoder<'Response>` - Decoder applied to the server response
-    ///   * `responseResolver` - optional parameter of type `ITypeResolver<'Response>` - Used by Fable to provide generic type info
-    ///   * `dataResolver` - parameter of type `ITypeResolver<'Data> option` - Used by Fable to provide generic type info
     ///
     /// **Output Type**
     ///   * `JS.Promise<Result<'Response,FetchError>>`
     ///
     /// **Exceptions**
     ///
-    static member tryDelete<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
+    static member inline tryDelete<'Data, 'Response> (url: string, ?data: 'Data, ?properties: RequestProperties list,
                                                ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy,
-                                               ?extra: ExtraCoders, ?decoder: Decoder<'Response>,
-                                               [<Inject>] ?responseResolver: ITypeResolver<'Response>,
-                                               [<Inject>] ?dataResolver: ITypeResolver<'Data>) =
+                                               ?extra: ExtraCoders, ?decoder: Decoder<'Response>) =
         Fetch.tryFetchAs
             (url, httpMethod = HttpMethod.DELETE, ?data = data, ?properties = properties, ?headers = headers,
-             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder, ?responseResolver = responseResolver,
-             ?dataResolver = dataResolver)
+             ?caseStrategy = caseStrategy, ?extra = extra, ?decoder = decoder)
