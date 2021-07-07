@@ -7,7 +7,7 @@ nuget Fable.Core
 nuget Fable.Fetch
 nuget Fable.Promise
 nuget Thoth.Json ~> 6
-nuget FSharp.Core redirects:force
+nuget FSharp.Core ~> 4.7.2 redirects:force
 nuget Fable.Node
 
 group Grammars
