@@ -2,17 +2,21 @@
     "private": true,
     "scripts": {},
     "devDependencies": {
-        "@babel/core": "^7.5.5",
-        "@babel/preset-env": "^7.5.5",
+        "@babel/core": "^7.24.3",
+        "@babel/preset-env": "^7.24.3",
         "@fortawesome/fontawesome-free": "^5.10.2",
         "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
+        "bulma": "0.9.3",
         "fable-compiler": "^2.3.23",
         "fable-splitter": "^2.1.11",
-        "gh-pages": "^2.1.1",
+        "gatsby-remark-vscode": "^3.3.1",
+        "gh-pages": "^6.1.1",
         "json-server": "^0.15.1",
         "mocha": "^6.2.0",
-        "nacara": "^0.2.1",
-        "node-fetch": "^3.2.10"
+        "nacara": "^1.8.0",
+        "nacara-layout-standard": "^1.8.0",
+        "node-fetch": "^3.2.10",
+        "vscode-theme-onelight": "github:akamud/vscode-theme-onelight"
     },
     "dependencies": {}
 }

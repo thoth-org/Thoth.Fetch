@@ -1,0 +1,50 @@
+{
+    "siteMetadata": {
+        "title": "Thoth.Fetch",
+        "url": "https://thoth-org.github.io/",
+        "baseUrl": "/Thoth.Fetch/",
+        "editUrl" : "https://github.com/thoth-org/Thoth.Fetch/edit/master/docs"
+    },
+    "navbar": {
+        "start": [
+            {
+                "pinned": true,
+                "url": "/Thoth.Fetch/index.html",
+                "label": "Documentation",
+                "icon": "fas fa-book"
+            },
+            {
+                "url": "/Thoth.Fetch/changelog.html",
+                "label": "Changelog",
+                "icon": "fas fa-tasks"
+            }
+        ],
+        "end": [
+            {
+                "url": "https://github.com/MangelMaxime/Nacara",
+                "icon": "fab fa-github",
+                "label": "GitHub"
+            },
+            {
+                "url": "https://twitter.com/MangelMaxime",
+                "icon": "fab fa-twitter",
+                "label": "Twitter"
+            }
+        ]
+    },
+    "remarkPlugins": [
+        {
+            "resolve": "gatsby-remark-vscode",
+            "property": "remarkPlugin",
+            "options": {
+                "theme": "Atom One Light",
+                "extensions": [
+                    "vscode-theme-onelight"
+                ]
+            }
+        }
+    ],
+    "layouts": [
+        "nacara-layout-standard"
+    ]
+}

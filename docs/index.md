@@ -1,8 +1,7 @@
 ---
 title: Thoth.Fetch
+layout: standard
 ---
-
-[[toc]]
 
 This documentation is for `Thoth.Fetch` v2, documentation for older versions can be found here:
 
