@@ -2,7 +2,7 @@
     "private": true,
     "scripts": {},
     "devDependencies": {
-        "@babel/core": "^7.24.3",
+        "@babel/core": "^7.29.6",
         "@babel/preset-env": "^7.24.3",
         "@fortawesome/fontawesome-free": "^5.10.2",
         "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
