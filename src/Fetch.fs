@@ -26,17 +26,17 @@ module Helper =
         | Some _ -> ContentType "application/json" :: headers
         | _ -> headers
 
-    let inline encode data caseStrategy extra =
-        let encoder = Encode.Auto.generateEncoderCached (?caseStrategy = caseStrategy, ?extra = extra)
+    let encode data dataType caseStrategy extra =
+        let encoder = Encode.Auto.generateBoxedEncoderCached (dataType, ?caseStrategy = caseStrategy, ?extra = extra)
 
         data
         |> encoder
         |> Encode.toString 0
 
-    let inline withBody data caseStrategy extra properties =
+    let withBody data dataType caseStrategy extra properties =
         data
         |> Option.map (fun data ->
-            encode data caseStrategy extra
+            encode data dataType caseStrategy extra
             |> (!^)
             |> Body
             |> fun body -> body :: properties)
@@ -47,13 +47,13 @@ module Helper =
         |> Option.map ((@) properties)
         |> Option.defaultValue properties
 
-    let inline resolve (response: Response) caseStrategy extra (decoder: Decoder<'Response> option) =
+    let resolve (response: Response) responseType caseStrategy extra (decoder: Decoder<'Response> option) =
 
         let decoder =
             decoder
-            |> Option.defaultValue
-                (Decode.Auto.generateDecoderCached
-                    (?caseStrategy = caseStrategy, ?extra = extra))
+            |> Option.defaultWith (fun () ->
+                Decode.Auto.generateBoxedDecoderCached (responseType, ?caseStrategy = caseStrategy, ?extra = extra)
+                |> Decode.unboxDecoder)
 
         let decode body = Decode.fromString decoder body
 
@@ -63,7 +63,7 @@ module Helper =
                     promise {
                         let! body = response.text()
                         return
-                            if typeof<'Response> = typeof<unit>
+                            if responseType = typeof<unit>
                             then Ok(unbox ())
                             else
                                 match decode body with
@@ -90,6 +90,25 @@ module Helper =
 open Helper
 
 type Fetch =
+    static member __tryFetchAs<'Data, 'Response> (url: string, dataType: System.Type, responseType: System.Type,
+                                                ?decoder: Decoder<'Response>, ?data: 'Data,
+                                                ?httpMethod: HttpMethod, ?properties: RequestProperties list,
+                                                ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy,
+                                                ?extra: ExtraCoders) =
+        try
+            let properties =
+                [ Method <| defaultArg httpMethod HttpMethod.GET
+                  requestHeaders (defaultArg headers [] |> withContentTypeJson data) ]
+                |> withBody data dataType caseStrategy extra
+                |> withProperties properties
+
+            promise {
+                let! response = fetch url properties
+                return! resolve response responseType caseStrategy extra decoder
+            }
+            |> Promise.catch (NetworkError >> Error)
+
+        with exn -> promise { return PreparingRequestFailed exn |> Error }
 
     /// **Description**
     ///
@@ -118,20 +137,12 @@ type Fetch =
                                                 ?httpMethod: HttpMethod, ?properties: RequestProperties list,
                                                 ?headers: HttpRequestHeaders list, ?caseStrategy: CaseStrategy,
                                                 ?extra: ExtraCoders) =
-        try
-            let properties =
-                [ Method <| defaultArg httpMethod HttpMethod.GET
-                  requestHeaders (defaultArg headers [] |> withContentTypeJson data) ]
-                |> withBody data caseStrategy extra
-                |> withProperties properties
 
-            promise {
-                let! response = fetch url properties
-                return! resolve response caseStrategy extra decoder
-            }
-            |> Promise.catch (NetworkError >> Error)
-
-        with exn -> promise { return PreparingRequestFailed exn |> Error }
+        Fetch.__tryFetchAs(url, typeof<'Data>, typeof<'Response>,
+                            ?decoder = decoder, ?data = data,
+                            ?httpMethod = httpMethod, ?properties = properties,
+                            ?headers = headers, ?caseStrategy = caseStrategy,
+                            ?extra = extra)
 
     /// **Description**
     ///
